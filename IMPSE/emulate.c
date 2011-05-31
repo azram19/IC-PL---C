@@ -134,38 +134,64 @@ int muli(struct IMPSS* state, int body){
 }
 
 
-//❤                                L S                         ❤
+//❤                   L S                   ❤
 
-int halt(struct IMPSS* state, int address){
-
-	return 1;
-}
-
-int add(struct IMPSS* state, int address){
+int halt(struct IMPSS* state, int body){
 
 	return 1;
 }
 
-int sub(struct IMPSS* state, int address){
+int add(struct IMPSS* state, int body){
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	int maskR1 = 0x03E00000;
+	int maskR2 = 0x001F0000;
+	int maskR3 = 0x0000F100;
+
+	int r1= (mody&maskR1) >> 21;
+	int r2= (mody&maskR2) >> 16;
+	int r3= (mody&maskR3) >> 11;
+
+	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
 
 	return 1;
 }
 
-int mul(struct IMPSS* state, int address){
+int subd(struct IMPSS* state, int body){
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	int maskR1 = 0x03E00000;
+	int maskR2 = 0x001F0000;
+	int maskR3 = 0x0000F100;
+
+	int r1= (mody&maskR1) >> 21;
+	int r2= (mody&maskR2) >> 16;
+	int r3= (mody&maskR3) >> 11;
+
+	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
 
 	return 1;
 }
 
-int lw(struct IMPSS* state, int address){
+
+int mul(struct IMPSS* state, int body){
 
 	return 1;
 }
 
-int sw(struct IMPSS* state, int address){
+int lw(struct IMPSS* state, int body){
 
 	return 1;
 }
 
+int sw(struct IMPSS* state, int body){
+
+	return 1;
+}
+
+//                 L   S   .  .   . e n d   //
 
 int main(int argc, char *argv[]){
 	return 0;
