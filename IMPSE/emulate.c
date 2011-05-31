@@ -121,6 +121,72 @@ int bge(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
+//------------------
+int beq(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(state -> registers[r1] == state -> registers[r2]){
+		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int bne(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(state -> registers[r1] != state -> registers[r2]){
+		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int blt(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(state -> registers[r1] < state -> registers[r2]){
+		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int bgt(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(state -> registers[r1] > state -> registers[r2]){
+		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+//------------------
 int jmp(struct IMPSS* state, int body){
     int addrMask = 134217727;
     int address = body & addrMask;
