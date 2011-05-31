@@ -4,6 +4,7 @@
 
 #define NUMBER_OF_REGISTERS 32
 #define SIZE_OF_MEMORY 65536 
+#define SUCCESS 1
 
 struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
@@ -39,7 +40,7 @@ int ble(struct IMPSS* state, int body){
 	if(state -> registers[r1] <= state -> registers[r2]){
 		state -> PC = state -> PC + (memory(state, immediate) << 2);
 	}
-	return 1;
+	return SUCCESS;
 }
 
 int bge(struct IMPSS* state, int body){
@@ -48,13 +49,13 @@ int bge(struct IMPSS* state, int body){
     
     int r1 = (body & (rMask << 21)) >> 21;
     int r2 = (body & (rMask << 16)) >> 16;
-    int immediate = body & immMask;						// immediate not immidiate ;)
+    int immediate = body & immMask;						
     
-    if(state -> registers[r1] > state -> registers[r2]){   // shouldn't it be >= ???
+    if(state -> registers[r1] >= state -> registers[r2]){
         state -> PC = state -> PC + (memory(state, immediate) << 2);
     }
     
-    return 1;
+    return SUCCESS;
 }
 
 int jmp(struct IMPSS* state, int body){
@@ -63,7 +64,7 @@ int jmp(struct IMPSS* state, int body){
     
     state -> PC = address;    
 
-    return 1;
+    return SUCCESS;
 }
 
 int jr(struct IMPSS* state, int body){
@@ -72,7 +73,7 @@ int jr(struct IMPSS* state, int body){
 
     state -> PC = state -> registers[r1];
 
-    return 1;
+    return SUCCESS;
 }
 
 int jal(struct IMPSS* state, int body){
@@ -82,7 +83,7 @@ int jal(struct IMPSS* state, int body){
     state -> registers[31] = state -> PC + 4;
     state -> PC = address;
 
-    return 1;
+    return SUCCESS;
 }
 
 // by Agnieszka:
@@ -98,7 +99,7 @@ int addi(struct IMPSS* state, int body){
 
 	state -> registers[r1] = state -> registers[r2] + immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 // by Agnieszka:
@@ -114,7 +115,7 @@ int subi(struct IMPSS* state, int body){
 
 	state -> registers[r1] = state -> registers[r2] - immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 // by Agnieszka:
@@ -130,7 +131,7 @@ int muli(struct IMPSS* state, int body){
 
 	state -> registers[r1] = state -> registers[r2] * immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 
@@ -138,7 +139,7 @@ int muli(struct IMPSS* state, int body){
 
 int halt(struct IMPSS* state, int body){
 
-	return 1;
+	return SUCCESS;
 }
 
 int add(struct IMPSS* state, int body){
@@ -155,7 +156,7 @@ int add(struct IMPSS* state, int body){
 
 	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
 
-	return 1;
+	return SUCCESS;
 }
 
 int subd(struct IMPSS* state, int body){
@@ -172,23 +173,23 @@ int subd(struct IMPSS* state, int body){
 
 	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
 
-	return 1;
+	return SUCCESS;
 }
 
 
 int mul(struct IMPSS* state, int body){
 
-	return 1;
+	return SUCCESS;
 }
 
 int lw(struct IMPSS* state, int body){
 
-	return 1;
+	return SUCCESS;
 }
 
 int sw(struct IMPSS* state, int body){
 
-	return 1;
+	return SUCCESS;
 }
 
 //                 L   S   .  .   . e n d   //
