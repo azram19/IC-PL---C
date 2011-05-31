@@ -464,7 +464,7 @@ int main(int argc, char *argv[]){
 	*impss state;
 	int j;
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
-		state -> registers[j]=0;
+		state -> registers[j] = 0;
 	}
 	int k;
 	for(k=0; k < SIZE_OF_MEMORY; ++k){
@@ -502,7 +502,7 @@ int main(int argc, char *argv[]){
 	// i = adres
 	for(i=0; i < ninstructions; ++i){
 		int index = (instructions[i] & mask) >> 26;
-		int result = (*OpCodeToFunction[index])(*impss,instructions[i]);
+		int result = (*OpCodeToFunction[op_code(index)])(*impss,instructions[i]);
 		if(result == HALT) break;
 	}
 	
