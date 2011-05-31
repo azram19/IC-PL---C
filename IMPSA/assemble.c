@@ -1,6 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+#include<ctype.h>
 
 #define TYPE_NA 0
 #define TYPE_J 1
@@ -27,6 +28,8 @@ struct map_map{
 
 
 struct map_node * op_codes_tree = NULL;
+char *outputPath;
+struct command *commandArray;
 
 int map_put(struct map_node * root, char * key, int value){
     struct map_node node;
@@ -161,16 +164,17 @@ int op_char_to_int(char * op_code){
     return map_get(op_codes_tree, op_code);
 }
 
-int op_to_type(int op_code){
-    int op_type[18] = {TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_J, TYPE_R, TYPE_J };
-    return op_type[op_code];
+int op_to_type(int op_code) {
+	int op_type[18] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
+			TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I,
+			TYPE_I, TYPE_J, TYPE_R, TYPE_J };
+	return op_type[op_code];
 }
 
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
-char *outputPath;
 
 
-struct command{
+struct command {
 	//R (1) type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
 
@@ -185,16 +189,15 @@ struct command{
 	int opcode;
 
 	int r1;
-	int r3;
 	int r2;
+	int r3;
+
 
 	int constantValue;
 	char labelValue[];
 };
 
-
-
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     struct map_node codes_tree;
     op_codes_tree = &codes_tree;
     
@@ -220,28 +223,71 @@ int main(int argc, char *argv[]){
     map_put(op_codes_tree, "jmp", 15);
     map_put(op_codes_tree, "jr", 16);
     map_put(op_codes_tree, "jal", 17);
-
-	/*if(argc!=2){
-		printf("usage: %s filename", argv[0]);
-	}
-	else{
-     		FILE *sFile;
-			sFile = fopen(argv[1],"r");
-
-			if(sFile==NULL){
-				perror("error opening %s!", argv[1]);
-				return 1;
-			}
-			else{
-			 	outputPath=argv[2];
-//❤        L S  .  .  . e   n   d                              ❤
-				chuj();
-
-
-
-			}
-
-	}*/
     
-    return 0;
+	if (argc != 2) {
+		printf("usage: %s filename", argv[0]);
+	} else {
+		FILE *sFile;
+		sFile = fopen(argv[1], "r");
+
+		if (sFile == NULL) {
+			perror("error opening %s!", argv[1]);
+			return 1;
+		} else {
+			outputPath = argv[2];
+			int x;
+
+			/*Zjebane, trzeba:
+			 *
+			 * Brac linijka po linijce, ladowac do zmodyfikowanej funkcji readToken ktora bierze stringa jako argument
+			 * Do zrobienia 1.06.2011
+			 *
+			 * imsorrythankyou
+			 *
+			 */
+
+
+
+			while ((x = fgetc(inputFile)) != EOF) {
+				//start reading file
+			}
+
+			fclose(file);
+			//❤        L S  .  .  . e   n   d                              ❤
+
+		}
+    }
+
+	return 0;
 }
+
+void readToken(FILE *inputFile) {
+	int x;
+	char *inputString;
+	int i = 0;
+	struct command token;
+
+	if ((x = fgetc(inputFile)) != EOL) {
+		//look for label/or maybe opcode?
+		if (isalpha((char)x)) {
+			while ((x = fgetc(inputFile)) != EOL && (char) x != " ") {
+				if (((char) x) == ":") {
+					token.label=inputString;
+
+					//reset input string, and counter
+					inputString=NULL;
+					i=0;
+					//waiting for next token
+				}
+				inputString[i] = x;
+				i++;
+			}
+		}
+
+	}
+
+	commandArray=token;
+	commandArray++;
+
+}
+
