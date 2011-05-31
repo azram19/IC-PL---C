@@ -53,7 +53,7 @@ int jal(struct IMPSS* state, int body){
     return 1;
 }
 
-int addi(struct IMPSS* impssptr, int16_t immediate){
+int addi(struct IMPSS* impssptr, int32_t body){ // change to 32 bits
 	
 	return 1;
 }
