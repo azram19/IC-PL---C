@@ -11,6 +11,8 @@
 #define HALT 0
 #define ERROR -1
 
+char *outputPath;
+
 struct map_node{
     char * key;
     int value;
@@ -87,9 +89,9 @@ int op_to_type(int op_code){
     int op_type[18] = {TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_J, TYPE_R, TYPE_J };
     return op_type[op_code];
 }
-=======
+
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
-char *outputPath;
+
 
 
 struct command{
