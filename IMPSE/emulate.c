@@ -6,6 +6,7 @@
 #define SIZE_OF_MEMORY 65536 
 #define SUCCESS 1
 
+
 struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
@@ -198,8 +199,52 @@ int sw(struct IMPSS* state, int body){
 
 //                 L   S   .  .   . e n d   //
 
+
+// OpCodeFunction is a function pointer and points to function
+// which takes IMPSS* and int as arguments and returns an int
+typedef int (*OpCodeFunction)(struct IMPSS*, int);  
+
+
 int main(int argc, char *argv[]){
 	// instructions[]
 	
+	struct IMPSS impss;
+	
+	OpCodeFunction OpCodeToFunction[18];
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[0] = &halt;
+	
+
+	OpCodeToFunction[0] = (*OpCodeFunction)(*impss,instructions[0]);
+	
+
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
