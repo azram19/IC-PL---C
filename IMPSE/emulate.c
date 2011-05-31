@@ -48,7 +48,7 @@ int error(int error_code){
 /*
  * Returns 32 bits from memory.
  */
-int memory(struct IMPSS* state, int address){
+int get_memory(struct IMPSS* state, int address){
     if(address < 0 || address >= SIZE_OF_MEMORY){
         error(ERR_ILLEGAL_MEMORY_ACCESS);
     }
@@ -63,6 +63,19 @@ int memory(struct IMPSS* state, int address){
     return value;
 }
 
+int set_memory(struct IMPSS* state, int address, int value){
+    if(address < 0 || address >= SIZE_OF_MEMORY){
+        error(ERR_ILLEGAL_MEMORY_ACCESS);
+    }
+    
+    int mask = 511;
+    int i;
+    for(i = 0; i < 4; i++){
+        state -> memory[address + i] = (value & (mask << (24 - 8*i))) >> (24 - 8*i);
+    }
+    return value;
+}
+
 /*
  * Returns 32 bits register.
  */
@@ -72,6 +85,15 @@ int get_register(struct IMPSS* state, int reg_num){
     }
     
     return state -> registers[reg_num];
+}
+
+int set_register(struct IMPSS* state, int reg_num, int value){
+    if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
+        error(ERR_WRONG_REGISTER);
+    }
+    
+    state -> registers[reg_num] = value;
+    return value;
 }
 
 /*
@@ -96,8 +118,8 @@ int ble(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;	
 			
-	if(state -> registers[r1] <= state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) <= get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 	    state -> PC += 4;
 	}
@@ -112,8 +134,8 @@ int bge(struct IMPSS* state, int body){
     int r2 = (body & (rMask << 16)) >> 16;
     int immediate = body & immMask;						
     
-    if(state -> registers[r1] >= state -> registers[r2]){
-        state -> PC = state -> PC + (memory(state, immediate) << 2);
+    if(get_register(state, r1) >= get_register(state, r2)){
+        state -> PC = state -> PC + (get_memory(state, immediate) << 2);
     } else {
 	    state -> PC += 4;
 	}
@@ -130,8 +152,8 @@ int beq(struct IMPSS* state, int body){
 	int r2 = (body & r2mask) >> 16;
 	int immediate = body & valmask;
 
-	if(state -> registers[r1] == state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) == get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -146,8 +168,8 @@ int bne(struct IMPSS* state, int body){
 	int r2 = (body & r2mask) >> 16;
 	int immediate = body & valmask;
 
-	if(state -> registers[r1] != state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) != get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -162,8 +184,8 @@ int blt(struct IMPSS* state, int body){
 	int r2 = (body & r2mask) >> 16;
 	int immediate = body & valmask;
 
-	if(state -> registers[r1] < state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) < get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -178,8 +200,8 @@ int bgt(struct IMPSS* state, int body){
 	int r2 = (body & r2mask) >> 16;
 	int immediate = body & valmask;
 
-	if(state -> registers[r1] > state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) > get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -200,7 +222,7 @@ int jr(struct IMPSS* state, int body){
     int rMask = 31;
     int r1 = (body & (rMask << 21)) >> 21;
 
-    state -> PC = state -> registers[r1];
+    state -> PC = get_register(state, r1);
 
     return SUCCESS;
 }
@@ -226,7 +248,7 @@ int addi(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] + immediate;
+	set_register(state, r1, get_register(state, r2) + immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -242,7 +264,7 @@ int subi(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] - immediate;
+	set_register(state, r1, get_register(state, r2) - immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -258,7 +280,7 @@ int muli(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] * immediate;
+	set_register(state, r1, get_register(state, r2) * immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -283,7 +305,7 @@ int add(struct IMPSS* state, int body){
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) + (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) + get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -300,7 +322,7 @@ int sub(struct IMPSS* state, int body) {
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) - (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) - get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -317,7 +339,7 @@ int mul(struct IMPSS* state, int body) {
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) * (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) * get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -335,7 +357,7 @@ int lw(struct IMPSS* state, int body) {
 
 	int immediate = body & maskImmediate;
 
-	state -> registers[r1] = state -> memory[state -> registers[r2] + immediate];
+	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -353,7 +375,7 @@ int sw(struct IMPSS* state, int body) {
 
 	int immediate = body & maskImmediate;
 
-	state -> memory[state -> registers[r2] + immediate] = state -> registers[r1];
+	set_memory(state, get_register(state, r2) + immiediate, get_register(state, r1));
 	state -> PC += 4;
 	return SUCCESS;
 }
