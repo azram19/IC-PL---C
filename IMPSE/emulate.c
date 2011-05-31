@@ -1,7 +1,6 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
-#include<stdint.h>
 
 #define NUMBER_OF_REGISTERS 32
 #define SIZE_OF_MEMORY 65536 
@@ -55,12 +54,14 @@ int jal(struct IMPSS* state, int body){
     return 1;
 }
 
-int addi(struct IMPSS* impssptr, int32_t body){ // change to 32 bits
-	
+int addi(struct IMPSS* impssptr, int body){ // change to 32 bits
+	int mask = 1 << 26	
+	int i = body & mask;
+	printf("%d\n", i);
+
 	return 1;
 }
 
 int main(int argc, char *argv[]){
-
 	return 0;
 }
