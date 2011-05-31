@@ -407,6 +407,11 @@ int main(int argc, char *argv[]){
 	// mask used to extract opcode bits
 	int mask = 0xFC000000;
 	int i;
+
+	// odczytaj adres pierszej instrukcji
+	// wykonaj wszystkie instrukcje między pierwszą a adresem bez wykonywania haltów
+	// halt: continue
+	// i = adres
 	for(i=0; i < ninstructions; ++i){
 		int index = (instructions[i] & mask) >> 26;
 		int result = (*OpCodeToFunction[index])(*impss,instructions[i]);
