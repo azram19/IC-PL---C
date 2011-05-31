@@ -39,6 +39,8 @@ int ble(struct IMPSS* state, int body){
 			
 	if(state -> registers[r1] <= state -> registers[r2]){
 		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	} else {
+	    state -> PC += 4;
 	}
 	return SUCCESS;
 }
@@ -53,7 +55,9 @@ int bge(struct IMPSS* state, int body){
     
     if(state -> registers[r1] >= state -> registers[r2]){
         state -> PC = state -> PC + (memory(state, immediate) << 2);
-    }
+    } else {
+	    state -> PC += 4;
+	}
     
     return SUCCESS;
 }
