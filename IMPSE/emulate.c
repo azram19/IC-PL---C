@@ -303,24 +303,25 @@ int main(int argc, char *argv[]){
 	struct IMPSS impss;
 	
 	OpCodeFunction OpCodeToFunction[18];
+
 	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
-	OpCodeToFunction[0] = &halt;
+	OpCodeToFunction[1] = &add;
+	OpCodeToFunction[2] = &addi;
+	OpCodeToFunction[3] = &sub;
+	OpCodeToFunction[4] = &subi;
+	OpCodeToFunction[5] = &mul;
+	OpCodeToFunction[6] = &muli;
+	OpCodeToFunction[7] = &lw;
+	OpCodeToFunction[8] = &sw;
+	OpCodeToFunction[9] = &beq;
+	OpCodeToFunction[10] = &bne;
+	OpCodeToFunction[11] = &blt;
+	OpCodeToFunction[12] = &bgt;
+	OpCodeToFunction[13] = &ble;
+	OpCodeToFunction[14] = &bge;
+	OpCodeToFunction[15] = &jmp;
+	OpCodeToFunction[16] = &jr;
+	OpCodeToFunction[17] = &jal;
 	
 
 	OpCodeToFunction[0] = (*OpCodeFunction)(*impss,instructions[0]);
