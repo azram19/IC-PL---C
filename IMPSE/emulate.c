@@ -286,7 +286,7 @@ int muli(struct IMPSS* state, int body){
 }
 
 
-//❤                   L S                   ❤
+//❤        L S  .  .  . f  r  o  m         h   e  r   e          ❤
 
 int halt(struct IMPSS* state, int body){
 
