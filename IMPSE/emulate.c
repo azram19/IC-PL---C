@@ -68,6 +68,7 @@ int jal(struct IMPSS* state, int body){
     return 1;
 }
 
+// by Agnieszka:
 int addi(struct IMPSS* state, int address){
 	int mask = 0x03E00000;
 	int r1 = address & mask;
@@ -85,6 +86,7 @@ int addi(struct IMPSS* state, int address){
 	return 1;
 }
 
+// by Agnieszka:
 int subi(struct IMPSS* state, int address){
 	int mask = 0x03E00000;
 	int r1 = address & mask;
@@ -98,6 +100,24 @@ int subi(struct IMPSS* state, int address){
 	int immediate = address & mask;
 
 	state -> registers[r1] = state -> registers[r2] - immediate;
+	state -> PC += 4;
+	return 1;
+}
+
+// by Agnieszka:
+int muli(struct IMPSS* state, int address){
+		int mask = 0x03E00000;
+	int r1 = address & mask;
+	r1 = r1 >> 21;
+	
+	mask = 0x001F0000;
+	int r2 = address & mask;
+	r2 = r2 >> 16;
+
+	mask = 0x0000FFFF;
+	int immediate = address & mask;
+
+	state -> registers[r1] = state -> registers[r2] * immediate;
 	state -> PC += 4;
 	return 1;
 }
