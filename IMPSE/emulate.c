@@ -81,7 +81,12 @@ int addi(struct IMPSS* state, int address){
 	int immediate = address & mask;
 
 	state -> registers[r1] = state -> registers[r2] + immediate;
+	state -> PC += 4;
 	return 1;
+}
+
+int subi(struct IMPSS* state, int address){
+	
 }
 
 int main(int argc, char *argv[]){
