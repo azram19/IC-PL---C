@@ -20,6 +20,7 @@ struct map_node{
     struct map_node * parent;
 };
 
+
 int map_put(struct map_node * root, char * key, int value){
     struct map_node node;
     struct map_node * node_ptr = &node;
@@ -86,6 +87,33 @@ int op_to_type(int op_code){
     int op_type[18] = {TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_J, TYPE_R, TYPE_J };
     return op_type[op_code];
 }
+=======
+//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
+char *outputPath;
+
+
+struct command{
+	//R (1) type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	//I (2) type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
+
+	//J (3) type function.
+	//0-5 opcode  | 6 - 31 Address
+	int type;
+
+	char label[16];
+	int opcode;
+
+	int r1;
+	int r3;
+	int r2;
+
+	int constantValue;
+	char labelValue[];
+};
+
 
 
 int main(int argc, char *argv[]){
@@ -101,8 +129,8 @@ int main(int argc, char *argv[]){
 				return 1;
 			}
 			else{
-
-
+			 	outputPath=argv[2];
+//❤        L S  .  .  . e   n   d                              ❤
 				chuj();
 
 
