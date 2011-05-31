@@ -286,7 +286,7 @@ int muli(struct IMPSS* state, int body){
 }
 
 
-//❤        L S  .  .  . f  r  o  m         h   e  r   e          ❤
+//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
 int halt(struct IMPSS* state, int body){
 
@@ -380,7 +380,7 @@ int sw(struct IMPSS* state, int body) {
 	return SUCCESS;
 }
 
-//                 L   S   .  .   . e  n  d ❤  //
+//                 L   S   .  .   . e  n  d        ❤  //
 
 
 // OpCodeFunction is a function pointer and points to function

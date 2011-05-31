@@ -10,6 +10,10 @@ struct map_node{
 };
 
 
+char *outputPath;
+
+
+
 int main(int argc, char *argv[]){
 	if(argc!=2){
 		printf("usage: %s filename", argv[0]);
@@ -23,7 +27,7 @@ int main(int argc, char *argv[]){
 				return 1;
 			}
 			else{
-
+				outputPath=argv[2];
 
 				chuj();
 
