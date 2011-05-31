@@ -298,7 +298,6 @@ typedef int (*OpCodeFunction)(struct IMPSS*, int);
 
 
 int main(int argc, char *argv[]){
-	// instructions[]
 	
 	struct IMPSS impss;
 	
@@ -323,10 +322,15 @@ int main(int argc, char *argv[]){
 	OpCodeToFunction[16] = &jr;
 	OpCodeToFunction[17] = &jal;
 	
-
-	OpCodeToFunction[0] = (*OpCodeFunction)(*impss,instructions[0]);
+	// mask used to extract opcode bits
+	int mask = 0xFC000000;
+	int i;
+	for(i=0; i < ninstructions; ++i){
+		int index = (instructions[i] & mask) >> 26;
+		int result = (*OpCodeToFunction[index])(*impss,instructions[i]);
+		if(result == HALT) break;
+	}
 	
-
 	return 0;
 }
 
