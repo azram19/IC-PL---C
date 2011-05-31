@@ -3,8 +3,15 @@
 #include<stdio.h>
 
 #define NUMBER_OF_REGISTERS 32
-#define SIZE_OF_MEMORY 65536 
+#define SIZE_OF_MEMORY 65536
+#define NUMBER_OF_INSTRUCTIONS 18 
 #define SUCCESS 1
+#define HALT 0
+#define ERROR -1
+#define ERR_UNDEFINED_OPERATION 1
+#define ERR_ILLEGAL_MEMORY_ACCESS 2
+#define ERR_WRONG_REGISTER 3
+
 
 struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
@@ -12,10 +19,36 @@ struct IMPSS{
     int PC;
 };
 
+int error(int error_code){
+    
+    switch(error_code){
+        case ERR_UNDEFINED_OPERATION: {
+                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.");    
+                break;
+            }
+        case ERR_ILLEGAL_MEMORY_ACCESS: {
+                fprintf(stderr, "You've just tried to rape memory, we don't like our memory being raped. Don't ever do it again. Program terminated.");
+                break;
+            }
+        case ERR_WRONG_REGISTER: {
+                fprintf(stderr, "404; register doesn't exist. Program terminated.");    
+                break;
+            }         
+    }
+    
+    exit(EXIT_FAILURE);
+}
+
+
+
 /*
  * Returns 32 bits from memory.
-*/
+ */
 int memory(struct IMPSS* state, int address){
+    if(address < 0 || address >= SIZE_OF_MEMORY){
+        error(ERR_ILLEGAL_MEMORY_ACCESS);
+    }
+
     int value = 0;
     int i;
     for(i = 0; i < 4; i++){
@@ -24,6 +57,28 @@ int memory(struct IMPSS* state, int address){
         value <<= 8;
     }
     return value;
+}
+
+/*
+ * Returns 32 bits register.
+ */
+int get_register(struct IMPSS* state, int reg_num){
+    if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
+        error(ERR_WRONG_REGISTER);
+    }
+    
+    return state -> registers[reg_num];
+}
+
+/*
+ * Validates opcode.
+ */
+int op_code(int op){
+    if(op < 0 || op >= NUMBER_OF_INSTRUCTIONS){
+        error(ERR_ILLEGAL_MEMORY_ACCESS);
+    }
+    
+    return op;
 }
 
 // by Agnieszka:
