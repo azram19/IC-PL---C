@@ -33,21 +33,37 @@ int bge(struct IMPSS* state, int body){
     int r2 = (body & (rMask << 16)) >> 16;
     int immidiate = body & immMask;
     
-    if(r1 > r2){
+    if(state -> registers[r1] > state -> registers[r2]){
         state -> PC = state -> PC + (memory(state, immidiate) << 2);
     }
     
     return 1;
 }
+
 int jmp(struct IMPSS* state, int body){
+    int addrMask = 134217727;
+    int address = body & addrMask;
+    
+    state -> PC = address;    
 
     return 1;
 }
+
 int jr(struct IMPSS* state, int body){
+    int rMask = 31;
+    int r1 = (body & (rMask << 21)) >> 21;
+
+    state -> PC = state -> registers[r1];
 
     return 1;
 }
+
 int jal(struct IMPSS* state, int body){
+    int addrMask = 134217727;
+    int address = body & addrMask;
+    
+    state -> registers[31] = state -> PC + 4;
+    state -> PC = address;
 
     return 1;
 }
