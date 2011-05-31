@@ -122,6 +122,41 @@ int muli(struct IMPSS* state, int address){
 	return 1;
 }
 
+
+
+//❤                                L S                         ❤
+
+int halt(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+int add(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+int sub(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+int mul(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+int lw(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+int sw(struct IMPSS* state, int address){
+
+	return 1;
+}
+
+
 int main(int argc, char *argv[]){
 	return 0;
 }
