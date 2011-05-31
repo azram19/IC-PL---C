@@ -1,27 +1,40 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
-#include <assert.h>
-#include <stdint.h>
-#include <errno.h>
+#include<assert.h>
+#include<stdint.h>
+#include<errno.h>
 
 #define NUMBER_OF_REGISTERS 32
 #define SIZE_OF_MEMORY 65536
 #define NUMBER_OF_INSTRUCTIONS 18 
+
 #define SUCCESS 1
 #define HALT 0
 #define ERROR -1
+
 #define ERR_UNDEFINED_OPERATION 1
 #define ERR_ILLEGAL_MEMORY_ACCESS 2
 #define ERR_WRONG_REGISTER 3
 
 
+/*
+ * Struct used to hold current state of IMP machine.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 
 struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
     int PC;
 };
+
+/*
+ * Handles error codes.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 
 int error(int error_code){
     
@@ -47,12 +60,18 @@ int error(int error_code){
 
 /*
  * Returns 32 bits from memory.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return 32 bits from given memory address.
  */
 int get_memory(struct IMPSS* state, int address){
     if(address < 0 || address >= SIZE_OF_MEMORY){
         error(ERR_ILLEGAL_MEMORY_ACCESS);
     }
 
+    /*
+     * Because memory is stored in bytes, it has to be merged into 32bit number.
+     */
     int value = 0;
     int i;
     for(i = 0; i < 4; i++){
@@ -63,11 +82,21 @@ int get_memory(struct IMPSS* state, int address){
     return value;
 }
 
+/*
+ * Sets memory to given value
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value which memory has been set to
+ */
 int set_memory(struct IMPSS* state, int address, int value){
     if(address < 0 || address >= SIZE_OF_MEMORY){
         error(ERR_ILLEGAL_MEMORY_ACCESS);
     }
     
+    /*
+     * Memory is stored in bytes, value has to be divided into four bytes and
+     * then written to the right cells.
+     */
     int mask = 511;
     int i;
     for(i = 0; i < 4; i++){
@@ -77,7 +106,10 @@ int set_memory(struct IMPSS* state, int address, int value){
 }
 
 /*
- * Returns 32 bits register.
+ * Returns value of 32 bit register.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value of the given register
  */
 int get_register(struct IMPSS* state, int reg_num){
     if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
@@ -87,6 +119,12 @@ int get_register(struct IMPSS* state, int reg_num){
     return state -> registers[reg_num];
 }
 
+/* 
+ * Sets value of 32 bit register.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value which register has been set to
+ */
 int set_register(struct IMPSS* state, int reg_num, int value){
     if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
         error(ERR_WRONG_REGISTER);
@@ -98,10 +136,13 @@ int set_register(struct IMPSS* state, int reg_num, int value){
 
 /*
  * Validates opcode.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return opcode
  */
 int op_code(int op){
     if(op < 0 || op >= NUMBER_OF_INSTRUCTIONS){
-        error(ERR_ILLEGAL_MEMORY_ACCESS);
+        error(ERR_UNDEFINED_OPERATION);
     }
     
     return op;
@@ -126,6 +167,12 @@ int ble(struct IMPSS* state, int body){
 	return SUCCESS;
 }
 
+/*
+ * Branches if r1 greater or equal to r2.
+ *
+ * @instruction-type I
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int bge(struct IMPSS* state, int body){
     int rMask = 31;
     int immMask = 131071;
@@ -209,6 +256,13 @@ int bgt(struct IMPSS* state, int body){
 }
 
 //------------------
+
+/*
+ * Jumps to the given address.
+ * 
+ * @instruction-type J
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jmp(struct IMPSS* state, int body){
     int addrMask = 134217727;
     int address = body & addrMask;
@@ -218,6 +272,12 @@ int jmp(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
+/*
+ * Jumps to an address given in the register.
+ *
+ * @instruction-type R
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jr(struct IMPSS* state, int body){
     int rMask = 31;
     int r1 = (body & (rMask << 21)) >> 21;
@@ -227,11 +287,18 @@ int jr(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
+/*
+ * Jumps to the given address, and stores address of next instruction in 
+ * a register.
+ *
+ * @instruction-type J
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jal(struct IMPSS* state, int body){
     int addrMask = 134217727;
     int address = body & addrMask;
     
-    state -> registers[31] = state -> PC + 4;
+    set_register(state, 31, state -> PC + 4);
     state -> PC = address;
 
     return SUCCESS;
