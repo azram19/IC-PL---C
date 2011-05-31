@@ -466,10 +466,15 @@ int main(int argc, char *argv[]){
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
 		state -> registers[j] = 0;
 	}
-	int k;
-	for(k=0; k < SIZE_OF_MEMORY; ++k){
-		state -> memory[k] = 0;
+	
+	for(j=0; j < SIZE_OF_MEMORY; ++j){
+		state -> memory[j] = 0;
 	}
+	
+	for(j = 0; j < ninstructions; j += 4){
+	    set_memory(state, j, instructions[j/4]);
+	}
+	free(instructions);
 	
 	OpCodeFunction OpCodeToFunction[18];
 
@@ -500,13 +505,14 @@ int main(int argc, char *argv[]){
 	// wykonaj wszystkie instrukcje między pierwszą a adresem bez wykonywania haltów
 	// halt: continue
 	// i = adres
+	// L_KPR:  Zmienilem instructions na get_memory(), bo składujemy instrukcje w pamieci, razem z danymi.
 	for(i=0; i < ninstructions; ++i){
-		int index = (instructions[i] & mask) >> 26;
-		int result = (*OpCodeToFunction[op_code(index)])(*impss,instructions[i]);
+		int index = (get_memory(state, i) & mask) >> 26;
+		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, i));
 		if(result == HALT) break;
 	}
 	
-	free(instructions);
+	
 	return 0;
 }
 
