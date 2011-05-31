@@ -135,5 +135,7 @@ int muli(struct IMPSS* state, int body){
 
 
 int main(int argc, char *argv[]){
+	// instructions[]
+	
 	return 0;
 }
