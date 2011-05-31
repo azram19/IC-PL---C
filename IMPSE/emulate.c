@@ -209,16 +209,16 @@ int add(struct IMPSS* state, int body){
 	int maskR2 = 0x001F0000;
 	int maskR3 = 0x0000F100;
 
-	int r1= (mody&maskR1) >> 21;
-	int r2= (mody&maskR2) >> 16;
-	int r3= (mody&maskR3) >> 11;
+	int r1 = (mody & maskR1) >> 21;
+	int r2 = (mody & maskR2) >> 16;
+	int r3 = (mody & maskR3) >> 11;
 
-	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
-
+	state -> registers[r1] = (state -> registers[r2]) + (state -> registers[r3]);
+	state -> PC += 4;
 	return SUCCESS;
 }
 
-int subd(struct IMPSS* state, int body){
+int sub(struct IMPSS* state, int body) {
 	//R type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
 
@@ -226,32 +226,69 @@ int subd(struct IMPSS* state, int body){
 	int maskR2 = 0x001F0000;
 	int maskR3 = 0x0000F100;
 
-	int r1= (mody&maskR1) >> 21;
-	int r2= (mody&maskR2) >> 16;
-	int r3= (mody&maskR3) >> 11;
+	int r1 = (mody & maskR1) >> 21;
+	int r2 = (mody & maskR2) >> 16;
+	int r3 = (mody & maskR3) >> 11;
 
-	state ->registers[r1] = (state->registers[r2] + state->registers[r3]);
-
+	state -> registers[r1] = (state -> registers[r2]) - (state -> registers[r3]);
+	state -> PC += 4;
 	return SUCCESS;
 }
 
+int mul(struct IMPSS* state, int body) {
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
 
-int mul(struct IMPSS* state, int body){
+	int maskR1 = 0x03E00000;
+	int maskR2 = 0x001F0000;
+	int maskR3 = 0x0000F100;
 
+	int r1 = (mody & maskR1) >> 21;
+	int r2 = (mody & maskR2) >> 16;
+	int r3 = (mody & maskR3) >> 11;
+
+	state -> registers[r1] = (state -> registers[r2]) * (state -> registers[r3]);
+	state -> PC += 4;
 	return SUCCESS;
 }
 
-int lw(struct IMPSS* state, int body){
+int lw(struct IMPSS* state, int body) {
+	//I type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
 
+	int maskR1 = 0x03E00000;
+	int maskR2 = 0x001F0000;
+	int maskImmediate = 0x0000FFFF;
+
+	int r1 = (body & maskR1) >> 21;
+	int r2 = (body & maskR2) >> 16;
+
+	int immediate = body & maskImmediate;
+
+	state -> registers[r1] = state -> memory[state -> registers[r2] + immediate];
+	state -> PC += 4;
 	return SUCCESS;
 }
 
-int sw(struct IMPSS* state, int body){
+int sw(struct IMPSS* state, int body) {
+	//I type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
 
+	int maskR1 = 0x03E00000;
+	int maskR2 = 0x001F0000;
+	int maskImmediate = 0x0000FFFF;
+
+	int r1 = (body & maskR1) >> 21;
+	int r2 = (body & maskR2) >> 16;
+
+	int immediate = body & maskImmediate;
+
+	state -> memory[state -> registers[r2] + immediate] = state -> registers[r1];
+	state -> PC += 4;
 	return SUCCESS;
 }
 
-//                 L   S   .  .   . e n d   //
+//                 L   S   .  .   . e  n  d ❤  //
 
 int main(int argc, char *argv[]){
 	return 0;
