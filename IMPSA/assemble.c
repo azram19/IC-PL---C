@@ -9,7 +9,7 @@ struct map_node{
     map_node * right;
 };
 
-
+//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 char *outputPath;
 
 
@@ -36,7 +36,6 @@ struct command{
 };
 
 
-//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 int main(int argc, char *argv[]){
 	if(argc!=2){
 		printf("usage: %s filename", argv[0]);
