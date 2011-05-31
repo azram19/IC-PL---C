@@ -300,6 +300,12 @@ typedef int (*OpCodeFunction)(struct IMPSS*, int);
 int main(int argc, char *argv[]){
 	
 	struct IMPSS impss;
+	*impss state;
+	int j;
+	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
+		state -> registers[j]=0;
+	}
+	state -> memory[SIZE_OF_MEMORY] = 0;
 	
 	OpCodeFunction OpCodeToFunction[18];
 
