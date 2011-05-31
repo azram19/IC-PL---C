@@ -39,7 +39,7 @@ int ble(struct IMPSS* state, int body) {
 	if (state -> registers[r1] <= state -> registers[r2]) {
 		state -> PC = state -> PC + (memory(state, immediate) << 2);
 	}
-	return 1;
+	return SUCCESS;
 }
 
 int bge(struct IMPSS* state, int body) {
@@ -54,7 +54,7 @@ int bge(struct IMPSS* state, int body) {
 		state -> PC = state -> PC + (memory(state, immediate) << 2);
 	}
 
-	return 1;
+	return SUCCESS;
 }
 
 int jmp(struct IMPSS* state, int body) {
@@ -63,7 +63,7 @@ int jmp(struct IMPSS* state, int body) {
 
 	state -> PC = address;
 
-	return 1;
+	return SUCCESS;
 }
 
 int jr(struct IMPSS* state, int body) {
@@ -72,7 +72,7 @@ int jr(struct IMPSS* state, int body) {
 
 	state -> PC = state -> registers[r1];
 
-	return 1;
+	return SUCCESS;
 }
 
 int jal(struct IMPSS* state, int body) {
@@ -82,7 +82,7 @@ int jal(struct IMPSS* state, int body) {
 	state -> registers[31] = state -> PC + 4;
 	state -> PC = address;
 
-	return 1;
+	return SUCCESS;
 }
 
 // by Agnieszka:
@@ -98,7 +98,7 @@ int addi(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = state -> registers[r2] + immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 // by Agnieszka:
@@ -114,7 +114,7 @@ int subi(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = state -> registers[r2] - immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 // by Agnieszka:
@@ -130,7 +130,7 @@ int muli(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = state -> registers[r2] * immediate;
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 //❤                   L S                   ❤
@@ -153,7 +153,7 @@ int add(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = (state -> registers[r2]) + (state -> registers[r3]);
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 int sub(struct IMPSS* state, int body) {
@@ -170,7 +170,7 @@ int sub(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = (state -> registers[r2]) - (state -> registers[r3]);
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 int mul(struct IMPSS* state, int body) {
@@ -187,7 +187,7 @@ int mul(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = (state -> registers[r2]) * (state -> registers[r3]);
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 int lw(struct IMPSS* state, int body) {
@@ -205,7 +205,7 @@ int lw(struct IMPSS* state, int body) {
 
 	state -> registers[r1] = state -> memory[state -> registers[r2] + immediate];
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 int sw(struct IMPSS* state, int body) {
@@ -223,7 +223,7 @@ int sw(struct IMPSS* state, int body) {
 
 	state -> memory[state -> registers[r2] + immediate] = state -> registers[r1];
 	state -> PC += 4;
-	return 1;
+	return SUCCESS;
 }
 
 //                 L   S   .  .   . e  n  d ❤  //
