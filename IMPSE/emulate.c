@@ -1,6 +1,9 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include <assert.h>
+#include <stdint.h>
+#include <errno.h>
 
 #define NUMBER_OF_REGISTERS 32
 #define SIZE_OF_MEMORY 65536
@@ -296,8 +299,82 @@ int sw(struct IMPSS* state, int body) {
 // which takes IMPSS* and int as arguments and returns an int
 typedef int (*OpCodeFunction)(struct IMPSS*, int);  
 
+// Binary Reader START
+//For tests
+void print_bits(int x){
+	int i;
+	int mask = 1 << 31;
+	for(i=1;i<=32;i++){
+		if((x & mask) == 0) printf("0"); else printf("1");
+		if(i==16) printf(" ");
+		x = x << 1;
+	}
+	printf("\n");
+}
+//For tests
+void print(int *instructions, int ninstructions){
+	int i;
+	printf("%d", ninstructions);
+	for(i=0;i<ninstructions;i++){
+		print_bits(instructions[i]);
+	}
+}
+
+int * createarray(int ninstructions){
+	int *instructions = malloc(ninstructions*sizeof(int));
+	if(instructions==NULL){
+		perror("malloc");
+		return NULL;
+	}
+	int i;
+	for(i=0;i<ninstructions;i++){
+		instructions[i]=0;
+	}
+	return instructions;
+}
+
+int * binaryreader(char *filename, int *instructions, int ninstructions){
+	FILE *fileptr = fopen(filename, "rb");
+	instructions = (int *) createarray(ninstructions);
+	assert(instructions!=NULL);
+	fread(instructions, sizeof(instructions[0]), ninstructions, fileptr);
+	fclose(fileptr);
+	return instructions;
+}
+//For tests
+void binarywriter(char *filename, int *instructions, int ninstructions){
+	FILE *fileptr = fopen("test.txt", "wb");
+	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
+	fclose(fileptr);
+}
+
+int arraysize(char *filename){
+	FILE *fileptr = fopen(filename, "rb");
+	if (fileptr == NULL) {
+		printf("%s: can't open: %s\n",filename,strerror(errno));
+		return 1;
+	}
+	fseek(fileptr, 0, SEEK_END);
+	int ninstructions = ftell(fileptr) >> 2;
+	rewind(fileptr);
+	fclose(fileptr);
+	return ninstructions;
+}
+// Binary Reader END
 
 int main(int argc, char *argv[]){
+
+	int *instructions = NULL;
+	char filename[100];
+	strcpy(filename,argv[1]);
+	int ninstructions = arraysize(filename);
+	instructions = binaryreader(filename, instructions, ninstructions);
+	//For tests: writes to the file test.txt
+	//binarywriter(filename,instructions, ninstructions);
+	/*
+	Here fun with the array of instructions.
+	*/
+	free(instructions);
 	
 	struct IMPSS impss;
 	
