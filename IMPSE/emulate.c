@@ -13,7 +13,7 @@ struct IMPSS{
 };
 
 
-int addi(*IMPSS impssptr, int16_t immediate){
+int addi(struct *IMPSS impssptr, int32_t body){ // change to 32 bits
 	
 }
 
