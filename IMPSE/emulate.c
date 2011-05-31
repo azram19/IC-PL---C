@@ -371,10 +371,6 @@ int main(int argc, char *argv[]){
 	instructions = binaryreader(filename, instructions, ninstructions);
 	//For tests: writes to the file test.txt
 	//binarywriter(filename,instructions, ninstructions);
-	/*
-	Here fun with the array of instructions.
-	*/
-	free(instructions);
 	
 	struct IMPSS impss;
 	
@@ -408,6 +404,7 @@ int main(int argc, char *argv[]){
 		if(result == HALT) break;
 	}
 	
+	free(instructions);
 	return 0;
 }
 
