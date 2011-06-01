@@ -21,6 +21,13 @@
 /*
  * Struct used to hold current state of IMP machine.
  *
+ * Functions:
+ * get_register() - gets register's value
+ * set_register() - sets register to the given value
+ * get_memory()   - gets value at the given memory address
+ * set_memory()   - sets value at the given memoty address
+ *
+ *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
 
