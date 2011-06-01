@@ -261,27 +261,35 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void readToken(FILE *inputFile) {
-	int x;
-	char *inputString;
+void readToken(char *inputLine) {
+
+	char *tokenField;
 	int i = 0;
 	struct command token;
 
-	if ((x = fgetc(inputFile)) != EOL) {
-		//look for label/or maybe opcode?
-		if (isalpha((char)x)) {
-			while ((x = fgetc(inputFile)) != EOL && (char) x != " ") {
+
+
+
+	if ((inputLine[i])!= NULL){
+		if (isalpha(inputLine[i])) {
+			while ((inputLine[i])!= NULL && (inputLine[i])!= " ") {
+
 				if (((char) x) == ":") {
 					token.label=inputString;
-
 					//reset input string, and counter
 					inputString=NULL;
 					i=0;
 					//waiting for next token
 				}
-				inputString[i] = x;
+
+				inputString[i] = inputLine[i];
 				i++;
 			}
+
+
+
+
+
 		}
 
 	}
