@@ -234,23 +234,34 @@ int main(int argc, char *argv[]) {
 			perror("error opening %s!", argv[1]);
 			return 1;
 		} else {
+			//SUCCESS - FILE OPENED
 			outputPath = argv[2];
+
 			int x;
+			const char EOL = '\n';
+			const char EOC = '-'; //end of code;
 
-			/*Zjebane, trzeba:
-			 *
-			 * Brac linijka po linijce, ladowac do zmodyfikowanej funkcji readToken ktora bierze stringa jako argument
-			 * Do zrobienia 1.06.2011
-			 *
-			 * imsorrythankyou
-			 *
-			 */
-
-
+			char lineBuffer[80]; //kurwa paskudne strasznie no ale potrzebuje stringa.
+			int i;
 
 			while ((x = fgetc(inputFile)) != EOF) {
-				//start reading file
-			}
+					//read one line
+
+					if(x == EOL || x == EOC){
+						//pass the line to tokeniser
+						readToken(lineBuffer);
+						//empty the buffer
+						for(i;i>0;i--){
+							lineBuffer[i] = '\0';
+						}
+					}
+					else{
+						lineBuffer[i] = (char) x;
+						i++;
+					}
+				}
+
+
 
 			fclose(file);
 			//❤        L S  .  .  . e   n   d                              ❤
@@ -261,41 +272,35 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void readToken(char *inputLine) {
+void readToken(const char *str) {
+struct command token;
+int currentRegister=0;
 
-	char *tokenField;
-	int i = 0;
-	struct command token;
+	  char delims[]=" ,.-\t";
+	  char * tokenField;
+	  printf ("Splitting line \"%s\" into tokens:\n",str);
+	  tokenField = strtok (str,delims);
+	  while (tokenField != NULL)
+	  {
+	    printf ("%s\n",tokenField);
 
 
-
-
-	if ((inputLine[i])!= NULL){
-		if (isalpha(inputLine[i])) {
-			while ((inputLine[i])!= NULL && (inputLine[i])!= " ") {
-
-				if (((char) x) == ":") {
-					token.label=inputString;
-					//reset input string, and counter
-					inputString=NULL;
-					i=0;
-					//waiting for next token
-				}
-
-				inputString[i] = inputLine[i];
-				i++;
-			}
+	    if( (tokenField[(strlen(tokenField))-1])==":"){
+	    	//we have a label;
+	    	token.label=tokenField;
+	    }
+	    else if( (tokenField[0]=="$")){
+	    	//we have a register
+	    	if(currentRegister=0){
+	    		token.r1=
+	    	}
 
 
 
+	    }
+	    tokenField = strtok (NULL, delims);
+	  }
 
-
-		}
-
-	}
-
-	commandArray=token;
-	commandArray++;
 
 }
 
