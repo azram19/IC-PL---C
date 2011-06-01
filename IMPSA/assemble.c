@@ -173,6 +173,10 @@ int op_to_type(int op_code) {
 
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
+int reg_char_to_int(char * reg){
+	reg++;
+	return atoi(reg);
+}
 
 struct command {
 	//R (1) type function.
@@ -274,7 +278,8 @@ int main(int argc, char *argv[]) {
 
 void readToken(const char *str) {
 struct command token;
-int currentRegister=0;
+int currentRegister=1;
+int operationKnown=0;
 
 	  char delims[]=" ,.-\t";
 	  char * tokenField;
@@ -284,20 +289,33 @@ int currentRegister=0;
 	  {
 	    printf ("%s\n",tokenField);
 
-
 	    if( (tokenField[(strlen(tokenField))-1])==":"){
 	    	//we have a label;
-	    	token.label=tokenField;
+	    	int i;
+	    	for(i=0; i<16; i++) {
+	    		token.label[i]=tokenField[i];
+	    	}
 	    }
+	    else if(!operationKnown){
+			//if we dont know the operation yet, next thing must be operation.
+			token.opcode=op_char_to_int(tokenField);
+			token.type=op_to_type(token.opcode);
+			operationKnown=1;
+}
 	    else if( (tokenField[0]=="$")){
 	    	//we have a register
-	    	if(currentRegister=0){
-	    		token.r1=
+	    	if(currentRegister=1){
+	    		token.r1=reg_char_to_int(tokenField);
+	    	}else if(currentRegister=2)
+	    	{
+	    		token.r2=reg_char_to_int(tokenField);
+	    	}else if(currentRegister=3)
+	    	{
+	    		token.r3=reg_char_to_int(tokenField);
 	    	}
-
-
-
+	    	currentRegister++;
 	    }
+
 	    tokenField = strtok (NULL, delims);
 	  }
 
