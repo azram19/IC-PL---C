@@ -357,7 +357,7 @@ int muli(struct IMPSS* state, int body){
 
 int halt(struct IMPSS* state, int body){
 
-	return !SUCCESS;
+	return HALT;
 }
 
 int add(struct IMPSS* state, int body){
