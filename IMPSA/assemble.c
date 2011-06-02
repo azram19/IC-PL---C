@@ -15,7 +15,7 @@
 char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
 
 char *outputPath;
-struct command *commandArray;
+
 
 
 struct map_node {
@@ -407,6 +407,11 @@ int main(int argc, char *argv[]) {
 			int i=0;
 			int j;
 			int line=0;
+//*******************************************************************************************************
+//**********************************************RATUNKU**************************************************
+			struct command commandArray[100];
+//*******************************************************************************************************
+//*******************************************************************************************************
 
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
@@ -422,7 +427,7 @@ int main(int argc, char *argv[]) {
 					for (j=i; j > 0; j--) {
 						str[j] = '\0';
 					}
-					i++;
+					i=0;
 				} else {
 					str[i] = (char) x;
 					i++;
