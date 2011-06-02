@@ -12,7 +12,11 @@
 #define HALT 0
 #define ERROR -1
 
-char str[80] //Wulgarne, paskudne, nie potrafie inaczej.
+char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
+
+char *outputPath;
+struct command *commandArray;
+
 
 struct map_node {
 	char * key;
@@ -27,21 +31,27 @@ struct map_map {
 	struct map_node * root;
 };
 
-struct map_node * op_codes_tree = NULL;
-char *outputPath;
-struct command *commandArray;
+struct map_node * op_codes_tree;
+
+
+void rb_insert(struct map_node *, char *, struct map_node *);
+void rb_insert_case1(struct map_node *);
+void rb_insert_case2(struct map_node *);
+void rb_insert_case3(struct map_node *);
+void rb_insert_case4(struct map_node *);
+void rb_insert_case5(struct map_node *);
 
 int map_put(struct map_node * root, char * key, int value) {
 	struct map_node node;
 	struct map_node * node_ptr = &node;
 
-	node.key = key;
-	node.value = value;
-	node.left = NULL;
-	node.right = NULL;
+	node_ptr -> key = key;
+	node_ptr -> value = value;
+	node_ptr -> left = NULL;
+	node_ptr -> right = NULL;
 
 	tree_insert(root, key, node_ptr);
-	//rb_insert(root, key, node_ptr);
+	rb_insert(root, key, node_ptr);
 
 	return SUCCESS;
 }
@@ -70,7 +80,7 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 }
 
 void tree_rotate_right(struct map_map * map) {
-	struct map_node * root = map -> root
+	struct map_node * root = map -> root;
 	map -> root = map -> root -> left;
 	root -> left = map -> root -> right;
 	map -> root -> right = root;
@@ -83,47 +93,9 @@ void tree_rotate_left(struct map_map * map) {
 	map -> root -> left = root;
 }
 
-int rb_insert(struct map_node * root, char * key, struct map_node * node) {
-	//node -> colour = red;
-rb_insert_case1(struct map_node * node)
-return SUCCESS;
-}
 
-int rb_insert_case1(struct map_node * node) {
-	if (node -> parent == NULL) {
-node	-> colour = 1
-} else {
-	rb_insert_case2(node);
-}
-}
-int rb_insert_case2(struct map_node * node) {
-	if (node -> parent -> color == 1) {
-		return;
-	} else {
-		rb_insert_case3(node);
-	}
-}
-int rb_insert_case3(struct map_node * node) {
-	struct map_node * u = uncle(node), *g;
-
-	if (u != NULL && u -> colour == 2) {
-		node -> parent -> colour = 1;
-		u -> colour = 1;
-		g = grandparent(node);
-		g -> colour = 2;
-	} else {
-		insert_case4(node);
-	}
-}
-int rb_insert_case4(struct map_node * node) {
-	struct map_node * g = grandparent;
-	struct map_map m;
-	struct map_map * m_ptr = &m;
-	m.root = node -> parent;
-	//TODO
-}
-int rb_insert_case5(struct map_node * node) {
-
+void rb_insert(struct map_node * root, char * key, struct map_node * node) {
+    rb_insert_case1(node);
 }
 
 struct map_node * grandparent(struct map_node * node) {
@@ -144,6 +116,62 @@ struct map_node * uncle(struct map_node * node) {
 	} else {
 		return g -> left;
 	}
+}
+void rb_insert_case1(struct map_node * node) {
+	if (node -> parent == NULL) {
+        node -> colour = 1;
+    } else {
+	    rb_insert_case2(node);
+    }
+}
+void rb_insert_case2(struct map_node * node) {
+	if (node -> parent -> colour == 1) {
+		return;
+	} else {
+		rb_insert_case3(node);
+	}
+}
+void rb_insert_case3(struct map_node * node) {
+	struct map_node * u = uncle(node), *g;
+
+	if (u != NULL && u -> colour == 2) {
+		node -> parent -> colour = 1;
+		u -> colour = 1;
+		g = grandparent(node);
+		g -> colour = 2;
+	} else {
+		rb_insert_case4(node);
+	}
+}
+void rb_insert_case4(struct map_node * node) {
+	struct map_node * g = grandparent(node);
+	struct map_map m;
+	struct map_map * m_ptr = &m;
+	m.root = node -> parent;
+
+ 
+    if ((node == node -> parent -> right) && (node -> parent == g -> left)) {
+        tree_rotate_left(m_ptr);
+        node = node -> left;
+    } else if ((node == node -> parent -> left) && (node -> parent == g -> right)) {
+        tree_rotate_right(m_ptr);
+        node = node -> right;
+    }
+    rb_insert_case5(node);
+}
+void rb_insert_case5(struct map_node * node) {
+    struct map_node * g = grandparent(node);
+	struct map_map m;
+	struct map_map * m_ptr = &m;
+	m.root = g;
+ 
+    node -> parent -> colour = 1;
+    g -> colour = 2;
+    if ((node == node -> parent -> left) && (node -> parent == g -> left)) {
+        tree_rotate_right(m_ptr);
+    } else {
+        tree_rotate_left(m_ptr);
+    }
 }
 
 int map_get(struct map_node * root, char * key) {
@@ -277,6 +305,19 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+    //TEST - map
+    struct map_node map_tree;
+	struct map_node * map = &map_tree;
+
+	map -> key = NULL;
+	map -> left = NULL;
+	map -> right = NULL;
+
+    map_put(map, "pies", 14);
+    int m = map_get(map, "pies");
+	
+	printf("MAP %s : %d\n", "pies", m);
+	
 	return 0;
 }
 
