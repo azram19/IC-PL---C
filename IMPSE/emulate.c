@@ -178,7 +178,12 @@ int op_code(int op){
     return op;
 }
 
-// by Agnieszka:
+/*
+ * Branches if r1 less or equal to r2.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 int ble(struct IMPSS* state, int body){
 	
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
@@ -320,7 +325,12 @@ int jal(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
-// by Agnieszka:
+/*
+ * Adds immediate value to r2 and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 int addi(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
@@ -332,7 +342,12 @@ int addi(struct IMPSS* state, int body){
 	return SUCCESS;
 }
 
-// by Agnieszka:
+/*
+ * Subtracts immediate value from r2 and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 int subi(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
@@ -344,7 +359,12 @@ int subi(struct IMPSS* state, int body){
 	return SUCCESS;
 }
 
-// by Agnieszka:
+/*
+ * Multiplicates r2 by an immediate value and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 int muli(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
@@ -432,9 +452,6 @@ int sw(struct IMPSS* state, int body) {
 //                 L   S   .  .   . e  n  d        ❤  //
 
 
-// OpCodeFunction is a function pointer and points to function
-// which takes IMPSS* and int as arguments and returns an int
-typedef int (*OpCodeFunction)(struct IMPSS*, int);  
 
 // Binary Reader START
 //For tests
@@ -499,6 +516,11 @@ int arraysize(char *filename){
 }
 // Binary Reader END
 
+/*
+ * Main
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Piotr Bar
+ */
 int main(int argc, char *argv[]){
 
 	int *instructions = NULL;
@@ -509,6 +531,9 @@ int main(int argc, char *argv[]){
 	//For tests: writes to the file test.txt
 	//binarywriter(filename,instructions, ninstructions);
 	
+/*
+ * Initialising state of IMPS.
+ */
 	struct IMPSS impss;
 	struct IMPSS *state = &impss;
 	int j;
@@ -524,7 +549,13 @@ int main(int argc, char *argv[]){
 	    set_memory(state, j, instructions[j/4]);
 	}
 	free(instructions);
-	
+
+/*
+ * OpCodeFunction is a function pointer and points to function
+ * which takes IMPSS* and int as arguments and returns an int
+ */
+typedef int (*OpCodeFunction)(struct IMPSS*, int); 
+ 
 	OpCodeFunction OpCodeToFunction[18];
 
 	OpCodeToFunction[0] = &halt;
