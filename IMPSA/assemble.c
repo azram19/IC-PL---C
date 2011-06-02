@@ -1,3 +1,4 @@
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -239,6 +240,120 @@ struct command {
 	char labelValue[];
 };
 
+/*
+ * Translates code line into struct token, and then returns it
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+struct command readToken() {
+	struct command *token;
+	token = (struct command *)malloc(1*sizeof(struct command));
+
+	int registersNumber;
+	int i;
+
+
+	char delims[] = " ,.-\t";
+	char * tokenField;
+	printf("Splitting line \"%s\" into tokens:\n", str);
+
+
+
+	tokenField = strtok(str, delims);
+	printf ("%s\n",tokenField);
+	//first thing is either label, or opcode
+
+	int lastCharIndex=(strlen(tokenField))-1;
+	char lastCharacter=tokenField[lastCharIndex];
+
+	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
+	if(lastCharacter==':'){
+		//we have a label;
+		for (i = 0; i < lastCharIndex; i++) {
+			if(tokenField[i]==":") break;
+			token->label[i] = tokenField[i];
+		}
+		//jump straight to next token
+		tokenField = strtok(NULL, delims);
+		printf ("2nd %s\n",tokenField);
+	}
+	//next thing HAS TO BE an opcode
+//	token.opcode = op_char_to_int(tokenField);
+//	token.type = op_to_type(token.opcode);
+
+	token->opcode = 2;
+	token->type = 2;
+
+	/*and now, all that is left is:
+	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+	 * I (2)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
+	 * J (1)  | 6 - 31 Address
+	 *
+	 * So, we need to scan for 0-3 registers
+	 *
+	 * So, then scan for address or immediate value
+	 *
+	 */
+
+	registersNumber = token->type;
+
+
+	//jump to next
+	tokenField = strtok(NULL, delims);
+
+	//and now to checking...
+
+	if (registersNumber == 1)
+		registersNumber--;
+
+	if (registersNumber == 3) {
+		//scan for 3 registers
+		//		if ((tokenField[0] == "$"))
+		token->r1 = reg_char_to_int(tokenField);
+		tokenField = strtok(NULL, delims);
+		token->r2 = reg_char_to_int(tokenField);
+		tokenField = strtok(NULL, delims);
+		token->r3 = reg_char_to_int(tokenField);
+
+		//thats it, add and GTFO
+	} else if (registersNumber == 2) {
+		token->r1 = reg_char_to_int(tokenField);
+		tokenField = strtok(NULL, delims);
+		printf ("%s\n",tokenField);
+		token->r2 = reg_char_to_int(tokenField);
+		//next thing will be an immediatevalue/labelvalue
+
+		//jump!
+		tokenField = strtok(NULL, delims);
+		printf ("%s\n",tokenField);
+		if (isalpha(tokenField[0])) {
+			//this is a label
+			for (i = 0; i < 16; i++) {
+				token->labelValue[i] = tokenField[i];
+			}
+		} else {
+			//this is a constantvalue/address
+			token->constantValue = atoi(tokenField);
+		}
+
+	} else if (registersNumber == 0) {
+		if (isalpha(tokenField[0])) {
+			//this is a label
+			for (i = 0; i < 16; i++) {
+				token->labelValue[i] = tokenField[i];
+			}
+		} else {
+			//this is a constantvalue/address
+			token->constantValue = atoi(tokenField);
+		}
+	}
+
+
+	//now we have a complete token.
+	return *token;
+}
+
+
 
 int main(int argc, char *argv[]) {
 	struct map_node codes_tree;
@@ -270,11 +385,11 @@ int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		printf("usage: %s filename", argv[0]);
 	} else {
-		FILE *sFile;
-		sFile = fopen(argv[1], "r");
+		FILE *inputFile;
+		inputFile = fopen(argv[1], "r");
 
-		if (sFile == NULL) {
-			perror("error opening %s!", argv[1]);
+		if (inputFile == NULL) {
+		//	perror("error opening %s!", argv[1]);
 			return 1;
 		} else {
 			//SUCCESS - FILE OPENED
@@ -311,7 +426,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			fclose(file);
+			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
 		}
@@ -327,119 +442,8 @@ int main(int argc, char *argv[]) {
 
     map_put(map, "pies", 14);
     int m = map_get(map, "pies");
-	
+
 	printf("MAP %s : %d\n", "pies", m);
-	
+
 	return 0;
-}
-
-/*
- * Translates code line into struct token, and then returns it
- *
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-struct command readToken() {
-	struct command token;
-	int registersNumber;
-	int i;
-
-
-	char delims[] = " ,.-\t";
-	char * tokenField;
-	printf("Splitting line \"%s\" into tokens:\n", str);
-
-
-
-	tokenField = strtok(str, delims);
-	printf ("%s\n",tokenField);
-	//first thing is either label, or opcode
-
-	int lastCharIndex=(strlen(tokenField))-1;
-	char lastCharacter=tokenField[lastCharIndex];
-
-	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
-	if(lastCharacter==':'){
-		//we have a label;
-		for (i = 0; i < lastCharIndex; i++) {
-			if(tokenField[i]==":") break;
-			token.label[i] = tokenField[i];
-		}
-		//jump straight to next token
-		tokenField = strtok(NULL, delims);
-		printf ("2nd %s\n",tokenField);
-	}
-	//next thing HAS TO BE an opcode
-//	token.opcode = op_char_to_int(tokenField);
-//	token.type = op_to_type(token.opcode);
-
-	token.opcode = 2;
-	token.type = 2;
-
-	/*and now, all that is left is:
-	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
-	 * I (2)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
-	 * J (1)  | 6 - 31 Address
-	 *
-	 * So, we need to scan for 0-3 registers
-	 *
-	 * So, then scan for address or immediate value
-	 *
-	 */
-
-	registersNumber = token.type;
-
-
-	//jump to next
-	tokenField = strtok(NULL, delims);
-
-	//and now to checking...
-
-	if (registersNumber == 1)
-		registersNumber--;
-
-	if (registersNumber == 3) {
-		//scan for 3 registers
-		//		if ((tokenField[0] == "$"))
-		token.r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
-		token.r2 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
-		token.r3 = reg_char_to_int(tokenField);
-
-		//thats it, add and GTFO
-	} else if (registersNumber == 2) {
-		token.r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
-		printf ("%s\n",tokenField);
-		token.r2 = reg_char_to_int(tokenField);
-		//next thing will be an immediatevalue/labelvalue
-
-		//jump!
-		tokenField = strtok(NULL, delims);
-		printf ("%s\n",tokenField);
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			for (i = 0; i < 16; i++) {
-				token.labelValue[i] = tokenField[i];
-			}
-		} else {
-			//this is a constantvalue/address
-			token.constantValue = atoi(tokenField);
-		}
-
-	} else if (registersNumber == 0) {
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			for (i = 0; i < 16; i++) {
-				token.labelValue[i] = tokenField[i];
-			}
-		} else {
-			//this is a constantvalue/address
-			token.constantValue = atoi(tokenField);
-		}
-	}
-
-
-	//now we have a complete token.
-	return token;
 }
