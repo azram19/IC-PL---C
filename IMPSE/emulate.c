@@ -106,7 +106,7 @@ int get_memory(struct IMPSS* state, int address){
     for(i = 0; i < 4; i++){
         value <<= 8;
         value += (int)state -> memory[address];
-        address++;
+        address ++;
     }
     return value;
 }
@@ -191,7 +191,7 @@ int ble(struct IMPSS* state, int body){
 	int immediate = body & M_IMM;	
 			
 	if(get_register(state, r1) <= get_register(state, r2)){
-		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+		state -> PC = state -> PC + (immediate << 2);
 	} else {
 	    state -> PC += 4;
 	}
@@ -211,7 +211,7 @@ int bge(struct IMPSS* state, int body){
     int immediate = body & M_IMM;						
     
     if(get_register(state, r1) >= get_register(state, r2)){
-        state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+        state -> PC = state -> PC + (immediate << 2);
     } else {
 	    state -> PC += 4;
 	}
@@ -227,7 +227,7 @@ int beq(struct IMPSS* state, int body){
 	int immediate = body & M_IMM;
 
 	if(get_register(state, r1) == get_register(state, r2)){
-		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+		state -> PC = state -> PC + (immediate << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -241,7 +241,7 @@ int bne(struct IMPSS* state, int body){
 	int immediate = body & M_IMM;
 
 	if(get_register(state, r1) != get_register(state, r2)){
-		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+		state -> PC = state -> PC + (immediate << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -255,7 +255,7 @@ int blt(struct IMPSS* state, int body){
 	int immediate = body & M_IMM;
 
 	if(get_register(state, r1) < get_register(state, r2)){
-		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+		state -> PC = state -> PC + (immediate << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -269,7 +269,7 @@ int bgt(struct IMPSS* state, int body){
 	int immediate = body & M_IMM;
 
 	if(get_register(state, r1) > get_register(state, r2)){
-		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+		state -> PC = state -> PC + (immediate << 2);
 	} else {
 		state -> PC += 4;
 	}
@@ -379,8 +379,23 @@ int muli(struct IMPSS* state, int body){
 
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
+/*
+ * Terminates program, prints registers and program counter.
+ *
+ * @instruction-type N/A
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int halt(struct IMPSS* state, int body){
-
+    printf("Regsiters:\n");
+    int i;
+    
+    printf("PC: %d (%#x)\n", state -> PC, state -> PC);
+    
+    for(i = 0; i < NUMBER_OF_REGISTERS; i++){
+        printf("$%d: %d (%#x)\n", i, get_register(state, i), get_register(state, i));
+    }
+    
+    state -> PC += 4;
 	return HALT;
 }
 
@@ -555,7 +570,10 @@ int main(int argc, char *argv[]){
  */
 	struct IMPSS impss;
 	struct IMPSS *state = &impss;
+
 	int j;
+	state -> PC = 0;
+	
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
 		state -> registers[j] = 0;
 	}
@@ -564,10 +582,14 @@ int main(int argc, char *argv[]){
 		state -> memory[j] = 0;
 	}
 	
+	struct IMPSS state_copy;
+	state_copy = impss;
+		
 	for(j = 0; j < ninstructions; j++){
 	    set_memory(state, j*4, letobe(instructions[j]));
+	    printf("M: %d - %d (%#x)\n", j*4, (letobe(instructions[j]) & (M_OPCODE << 26)) >> 26, letobe(instructions[j]));
 	}
-	free(instructions);
+	//free(instructions);
 
 /*
  * OpCodeFunction is a function pointer and points to function
@@ -597,23 +619,42 @@ typedef int (*OpCodeFunction)(struct IMPSS*, int);
 	OpCodeToFunction[17] = &jal;
 
 	// EMULATOR LOOP
-	// data section
-	state -> PC = (get_memory(state, 0) & M_ADDRESS);	
-	int i;
+	// data section - niepotrzebne (tak mi sie wydaje, sorry :/)
+	//state -> PC = (get_memory(state, 0) & M_ADDRESS);	
+	/*int i;
 	printf("DATA:\n"); //r
-	for(i = 4; i < (state -> PC); i+=4){
+	for(i = 4; i < (state -> PC); i += 4){
 		printf("D: %d \n", get_memory(state, i));//r
-	}
+	}*/
 	// instructions section
 	printf("\nINSTRUCTIONS:\n"); //r
 	while(1){
-		int index = (get_memory(state,state->PC) & (M_OPCODE << 26)) >> 26;
-		printf("OP: %d \n", index);//r
-		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state,state->PC));
-		if(result == HALT) break;		
+		int index = (get_memory(state, state->PC) & (M_OPCODE << 26)) >> 26;
+		printf("OP: %d PC %d\n", index, state -> PC);//r
+		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, state -> PC));
+		if(result == HALT) break;
+		for(j = 0; j < ninstructions; j++){
+	    //set_memory(state, j*4, letobe(instructions[j]));
+	        printf("M: %d - %d (%#x)\n", j*4, (get_memory(state, j*4) & (M_OPCODE << 26)) >> 26, get_memory(state, j*4));
+	    }
 	}
 			
 	
+	/*printf("%d\n", (0x01080000 & (M_REGISTER << 21)) >> 21);
+	printf("%d\n", (0x01080000 & (M_REGISTER << 16)) >> 16);
+	printf("%d\n", (0x01084000 & (M_REGISTER << 11)) >> 11);
+	printf("%d\n", (0x01080000 & M_IMM));
+	printf("%d\n", (0x01080000 & M_ADDRESS));*/
+	/*
+	int i;
+	for(i = 1; i < 18; i++){
+	    printf("\nI - %d\n", i);
+	    state_copy2 = state_copy;
+	    (*OpCodeToFunction[i])(&state_copy, 0x32478123);
+	    halt(&state_copy, 0);
+	}
+	*/
+		
 	printf("\n");
 	return 0;
 }
