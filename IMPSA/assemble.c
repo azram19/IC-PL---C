@@ -201,11 +201,22 @@ int op_to_type(int op_code) {
 
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
+/*
+ * Converts register symbol to integer
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @return number of register
+ */
 int reg_char_to_int(char * reg) {
 	reg++;
 	return atoi(reg);
 }
 
+/*
+ * Holds each code line in a struct
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 struct command {
 	//R (1) type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -227,6 +238,7 @@ struct command {
 	int constantValue;
 	char labelValue[];
 };
+
 
 int main(int argc, char *argv[]) {
 	struct map_node codes_tree;
@@ -321,6 +333,11 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/*
+ * Translates code line into struct token, and then returns it
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 struct command readToken() {
 	struct command token;
 	int registersNumber;
