@@ -51,7 +51,7 @@ int map_put(struct map_node * root, char * key, int value) {
 	node_ptr -> right = NULL;
 
 	tree_insert(root, key, node_ptr);
-	rb_insert(root, key, node_ptr);
+	//rb_insert(root, key, node_ptr); KUUURRRWAAA!!
 
 	return SUCCESS;
 }
