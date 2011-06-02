@@ -411,7 +411,7 @@ int main(int argc, char *argv[]){
 	// odczytaj adres pierszej instrukcji
 	// wykonaj wszystkie instrukcje między pierwszą a adresem bez wykonywania haltów
 	// halt: continue
-	// i = adres
+	// i = state -> PC na koncu kazdego wywolania petli, po wykonaniu funkcji
 	for(i=0; i < ninstructions; ++i){
 		int index = (instructions[i] & mask) >> 26;
 		int result = (*OpCodeToFunction[index])(*impss,instructions[i]);
