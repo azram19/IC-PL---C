@@ -1,4 +1,3 @@
-
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -278,11 +277,11 @@ struct command readToken() {
 		printf ("2nd %s\n",tokenField);
 	}
 	//next thing HAS TO BE an opcode
-//	token.opcode = op_char_to_int(tokenField);
-//	token.type = op_to_type(token.opcode);
+	token.opcode = op_char_to_int(tokenField);
+	token.type = op_to_type(token.opcode);
 
-	token->opcode = 2;
-	token->type = 2;
+//	token->opcode = 2;
+//	token->type = 2;
 
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -348,6 +347,10 @@ struct command readToken() {
 		}
 	}
 
+	puts("puts działa");
+	printf("a printf nie");
+	
+	printf("type: %d opcode: %d r1: $%d r2: $%d r3: %d immValu: %d immLabel %s",token->type,token->opcode,token->r1,token->r2,token->r3,token->constantValue,token->labelValue);
 
 	//now we have a complete token.
 	return *token;
@@ -417,7 +420,7 @@ int main(int argc, char *argv[]) {
 
 					//empty the buffer
 					for (j=i; j > 0; j--) {
-						str[i] = '\0';
+						str[j] = '\0';
 					}
 					i++;
 				} else {
