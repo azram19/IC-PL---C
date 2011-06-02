@@ -1,27 +1,47 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
-#include <assert.h>
-#include <stdint.h>
-#include <errno.h>
+#include<assert.h>
+#include<stdint.h>
+#include<errno.h>
 
 #define NUMBER_OF_REGISTERS 32
 #define SIZE_OF_MEMORY 65536
 #define NUMBER_OF_INSTRUCTIONS 18 
+
 #define SUCCESS 1
 #define HALT 0
 #define ERROR -1
+
 #define ERR_UNDEFINED_OPERATION 1
 #define ERR_ILLEGAL_MEMORY_ACCESS 2
 #define ERR_WRONG_REGISTER 3
 
 
+/*
+ * Struct used to hold current state of IMP machine.
+ *
+ * Functions:
+ * get_register() - gets register's value
+ * set_register() - sets register to the given value
+ * get_memory()   - gets value at the given memory address
+ * set_memory()   - sets value at the given memoty address
+ *
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 
 struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
     int PC;
 };
+
+/*
+ * Handles error codes.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 
 int error(int error_code){
     
@@ -47,12 +67,18 @@ int error(int error_code){
 
 /*
  * Returns 32 bits from memory.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return 32 bits from given memory address.
  */
-int memory(struct IMPSS* state, int address){
+int get_memory(struct IMPSS* state, int address){
     if(address < 0 || address >= SIZE_OF_MEMORY){
         error(ERR_ILLEGAL_MEMORY_ACCESS);
     }
 
+    /*
+     * Because memory is stored in bytes, it has to be merged into 32bit number.
+     */
     int value = 0;
     int i;
     for(i = 0; i < 4; i++){
@@ -64,7 +90,33 @@ int memory(struct IMPSS* state, int address){
 }
 
 /*
- * Returns 32 bits register.
+ * Sets memory to given value
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value which memory has been set to
+ */
+int set_memory(struct IMPSS* state, int address, int value){
+    if(address < 0 || address >= SIZE_OF_MEMORY){
+        error(ERR_ILLEGAL_MEMORY_ACCESS);
+    }
+    
+    /*
+     * Memory is stored in bytes, value has to be divided into four bytes and
+     * then written to the right cells.
+     */
+    int mask = 511;
+    int i;
+    for(i = 0; i < 4; i++){
+        state -> memory[address + i] = (value & (mask << (24 - 8*i))) >> (24 - 8*i);
+    }
+    return value;
+}
+
+/*
+ * Returns value of 32 bit register.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value of the given register
  */
 int get_register(struct IMPSS* state, int reg_num){
     if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
@@ -74,12 +126,30 @@ int get_register(struct IMPSS* state, int reg_num){
     return state -> registers[reg_num];
 }
 
+/* 
+ * Sets value of 32 bit register.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return value which register has been set to
+ */
+int set_register(struct IMPSS* state, int reg_num, int value){
+    if(reg_num < 0 || reg_num >= NUMBER_OF_REGISTERS){
+        error(ERR_WRONG_REGISTER);
+    }
+    
+    state -> registers[reg_num] = value;
+    return value;
+}
+
 /*
  * Validates opcode.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return opcode
  */
 int op_code(int op){
     if(op < 0 || op >= NUMBER_OF_INSTRUCTIONS){
-        error(ERR_ILLEGAL_MEMORY_ACCESS);
+        error(ERR_UNDEFINED_OPERATION);
     }
     
     return op;
@@ -96,14 +166,20 @@ int ble(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;	
 			
-	if(state -> registers[r1] <= state -> registers[r2]){
-		state -> PC = state -> PC + (memory(state, immediate) << 2);
+	if(get_register(state, r1) <= get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
 	} else {
 	    state -> PC += 4;
 	}
 	return SUCCESS;
 }
 
+/*
+ * Branches if r1 greater or equal to r2.
+ *
+ * @instruction-type I
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int bge(struct IMPSS* state, int body){
     int rMask = 31;
     int immMask = 131071;
@@ -112,8 +188,8 @@ int bge(struct IMPSS* state, int body){
     int r2 = (body & (rMask << 16)) >> 16;
     int immediate = body & immMask;						
     
-    if(state -> registers[r1] >= state -> registers[r2]){
-        state -> PC = state -> PC + (memory(state, immediate) << 2);
+    if(get_register(state, r1) >= get_register(state, r2)){
+        state -> PC = state -> PC + (get_memory(state, immediate) << 2);
     } else {
 	    state -> PC += 4;
 	}
@@ -121,6 +197,79 @@ int bge(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
+//------------------
+int beq(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(get_register(state, r1) == get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int bne(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(get_register(state, r1) != get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int blt(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(get_register(state, r1) < get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+int bgt(struct IMPSS* state, int body){
+	int r1mask = 0x03E00000;
+	int r2mask = 0x001F0000;
+	int valmask = 0x0000FFFF;
+	int r1 = (body & r1mask) >> 21;
+	int r2 = (body & r2mask) >> 16;
+	int immediate = body & valmask;
+
+	if(get_register(state, r1) > get_register(state, r2)){
+		state -> PC = state -> PC + (get_memory(state, immediate) << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+//------------------
+
+/*
+ * Jumps to the given address.
+ * 
+ * @instruction-type J
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jmp(struct IMPSS* state, int body){
     int addrMask = 134217727;
     int address = body & addrMask;
@@ -130,20 +279,33 @@ int jmp(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
+/*
+ * Jumps to an address given in the register.
+ *
+ * @instruction-type R
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jr(struct IMPSS* state, int body){
     int rMask = 31;
     int r1 = (body & (rMask << 21)) >> 21;
 
-    state -> PC = state -> registers[r1];
+    state -> PC = get_register(state, r1);
 
     return SUCCESS;
 }
 
+/*
+ * Jumps to the given address, and stores address of next instruction in 
+ * a register.
+ *
+ * @instruction-type J
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int jal(struct IMPSS* state, int body){
     int addrMask = 134217727;
     int address = body & addrMask;
     
-    state -> registers[31] = state -> PC + 4;
+    set_register(state, 31, state -> PC + 4);
     state -> PC = address;
 
     return SUCCESS;
@@ -160,7 +322,7 @@ int addi(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] + immediate;
+	set_register(state, r1, get_register(state, r2) + immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -176,7 +338,7 @@ int subi(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] - immediate;
+	set_register(state, r1, get_register(state, r2) - immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -192,17 +354,17 @@ int muli(struct IMPSS* state, int body){
 	mask = 0x0000FFFF;
 	int immediate = body & mask;
 
-	state -> registers[r1] = state -> registers[r2] * immediate;
+	set_register(state, r1, get_register(state, r2) * immediate);
 	state -> PC += 4;
 	return SUCCESS;
 }
 
 
-//❤                   L S                   ❤
+//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
 int halt(struct IMPSS* state, int body){
 
-	return SUCCESS;
+	return HALT;
 }
 
 int add(struct IMPSS* state, int body){
@@ -217,7 +379,7 @@ int add(struct IMPSS* state, int body){
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) + (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) + get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -234,7 +396,7 @@ int sub(struct IMPSS* state, int body) {
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) - (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) - get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -251,7 +413,7 @@ int mul(struct IMPSS* state, int body) {
 	int r2 = (mody & maskR2) >> 16;
 	int r3 = (mody & maskR3) >> 11;
 
-	state -> registers[r1] = (state -> registers[r2]) * (state -> registers[r3]);
+	set_register(state, r1, get_register(state, r2) * get_register(state, r3));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -269,7 +431,7 @@ int lw(struct IMPSS* state, int body) {
 
 	int immediate = body & maskImmediate;
 
-	state -> registers[r1] = state -> memory[state -> registers[r2] + immediate];
+	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
 	state -> PC += 4;
 	return SUCCESS;
 }
@@ -287,12 +449,12 @@ int sw(struct IMPSS* state, int body) {
 
 	int immediate = body & maskImmediate;
 
-	state -> memory[state -> registers[r2] + immediate] = state -> registers[r1];
+	set_memory(state, get_register(state, r2) + immiediate, get_register(state, r1));
 	state -> PC += 4;
 	return SUCCESS;
 }
 
-//                 L   S   .  .   . e  n  d ❤  //
+//                 L   S   .  .   . e  n  d        ❤  //
 
 
 // OpCodeFunction is a function pointer and points to function
@@ -376,12 +538,17 @@ int main(int argc, char *argv[]){
 	*impss state;
 	int j;
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
-		state -> registers[j]=0;
+		state -> registers[j] = 0;
 	}
-	int k;
-	for(k=0; k < SIZE_OF_MEMORY; ++k){
-		state -> memory[k] = 0;
+	
+	for(j=0; j < SIZE_OF_MEMORY; ++j){
+		state -> memory[j] = 0;
 	}
+	
+	for(j = 0; j < ninstructions; j += 4){
+	    set_memory(state, j, instructions[j/4]);
+	}
+	free(instructions);
 	
 	OpCodeFunction OpCodeToFunction[18];
 
@@ -411,14 +578,15 @@ int main(int argc, char *argv[]){
 	// odczytaj adres pierszej instrukcji
 	// wykonaj wszystkie instrukcje między pierwszą a adresem bez wykonywania haltów
 	// halt: continue
-	// i = state -> PC na koncu kazdego wywolania petli, po wykonaniu funkcji
+	// i = adres
+	// L_KPR:  Zmienilem instructions na get_memory(), bo składujemy instrukcje w pamieci, razem z danymi.
 	for(i=0; i < ninstructions; ++i){
-		int index = (instructions[i] & mask) >> 26;
-		int result = (*OpCodeToFunction[index])(*impss,instructions[i]);
+		int index = (get_memory(state, i) & mask) >> 26;
+		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, i));
 		if(result == HALT) break;
 	}
 	
-	free(instructions);
+	
 	return 0;
 }
 
