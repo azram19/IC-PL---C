@@ -428,6 +428,7 @@ int main(int argc, char *argv[]) {
 						str[j] = '\0';
 					}
 					i=0;
+					line++;
 				} else {
 					str[i] = (char) x;
 					i++;
