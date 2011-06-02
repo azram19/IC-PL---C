@@ -545,16 +545,9 @@ int main(int argc, char *argv[]){
 	OpCodeToFunction[15] = &jmp;
 	OpCodeToFunction[16] = &jr;
 	OpCodeToFunction[17] = &jal;
-	
-	
 
-	// odczytaj adres pierszej instrukcji
-	// wykonaj wszystkie instrukcje między pierwszą a adresem bez wykonywania haltów
-	// halt: continue
-	// i = adres
-	// L_KPR:  Zmienilem instructions na get_memory(), bo składujemy instrukcje w pamieci, razem z danymi.
-
-	// getting the address of start of instructions
+	// EMULATOR LOOP
+	// data section
 	state -> PC = (get_memory(state,0) & M_ADDRESS);	
 	int i;
 	for(i=4; i < (state -> PC); i+=4){
@@ -562,6 +555,7 @@ int main(int argc, char *argv[]){
 		if (index == 0) continue;
 		(*OpCodeToFunction[op_code(index)])(state, get_memory(state,i));
 	}
+	// instructions section
 	while(1){
 		int index = (get_memory(state,state->PC) & (M_OPCODE << 26)) >> 26;
 		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state,state->PC));
