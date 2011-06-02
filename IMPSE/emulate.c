@@ -56,33 +56,33 @@ int error(int error_code){
     
     switch(error_code){
         case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.");    
+                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.\n");    
                 break;
             }
         case ERR_ILLEGAL_MEMORY_ACCESS: {
-                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.");
+                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.\n");
                 break;
             }
         case ERR_WRONG_REGISTER: {
-                fprintf(stderr, "404; register doesn't exist. Program terminated.");    
+                fprintf(stderr, "404; register doesn't exist. Program terminated.\n");    
                 break;
             }
         case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, "You wanted more than we could give you. Program terminated.");    
+                fprintf(stderr, "You wanted more than we could give you. Program terminated.\n");    
                 break;
             }
         case ERR_CANT_OPEN_FILE: {
-            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.");    
+            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.\n");    
             break;
         }         
     }
-    
+    printf("\n");
     exit(EXIT_FAILURE);
     return ERROR;
 }
 
 int error_file(int error_code, char * filename){
-    fprintf(stderr, "Problem with file: %s", filename); 
+    fprintf(stderr, "Problem with file: %s\n", filename); 
     error(error_code);
     return ERROR;
 }
@@ -499,6 +499,22 @@ int arraysize(char *filename){
 }
 // Binary Reader END
 
+/*
+ * Converts between endiness.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int letobe(int l){
+    int b = 0;
+    int i;
+    
+    for(i = 0; i < 32; i++){
+        b = (b << 1) | ((l & ((1 << 31) >> i)) >> (31 - i));
+    }
+    
+    return b;
+}
+
 int main(int argc, char *argv[]){
 
 	int *instructions = NULL;
@@ -520,8 +536,8 @@ int main(int argc, char *argv[]){
 		state -> memory[j] = 0;
 	}
 	
-	for(j = 0; j < ninstructions; j += 4){
-	    set_memory(state, j, instructions[j/4]);
+	for(j = 0; j < ninstructions; j++){
+	    set_memory(state, j*4, letobe(instructions[j]));
 	}
 	free(instructions);
 	
@@ -548,34 +564,22 @@ int main(int argc, char *argv[]){
 
 	// EMULATOR LOOP
 	// data section
-	state -> PC = (get_memory(state,0) & M_ADDRESS);	
+	state -> PC = (get_memory(state, 0) & M_ADDRESS);	
 	int i;
-	for(i=4; i < (state -> PC); i+=4){
-		int index = (get_memory(state,i) & (M_OPCODE << 26)) >> 26;
-		if (index == 0) continue;
-		(*OpCodeToFunction[op_code(index)])(state, get_memory(state,i));
+	printf("DATA:\n"); //r
+	for(i = 4; i < (state -> PC); i+=4){
+		printf("D: %d \n", get_memory(state, i));//r
 	}
 	// instructions section
+	printf("\nINSTRUCTIONS:\n"); //r
 	while(1){
 		int index = (get_memory(state,state->PC) & (M_OPCODE << 26)) >> 26;
+		printf("OP: %d \n", index);//r
 		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state,state->PC));
 		if(result == HALT) break;		
 	}
-			
 	
-	//TEST - memory
-	set_memory(state, 4, 4);
-	int m = get_memory(state, 4);
-	
-	printf("MEMORY %d : %d\n", 4, m);
-	
-	
-	//TEST - registers
-	set_register(state, 2,7);
-	int r = get_register(state, 2);
-	
-	printf("REGISTER %d : %d\n", 2, r);
-	
+	printf("\n");
 	return 0;
 }
 
