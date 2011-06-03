@@ -46,46 +46,10 @@ struct IMPSS{
     int PC;
 };
 
-/*
- * Handles error codes.
- *
- * @author Lukasz Koprowski <azram19@gmail.com>
- */
-
-int error(int error_code){
-    
-    switch(error_code){
-        case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.\n");    
-                break;
-            }
-        case ERR_ILLEGAL_MEMORY_ACCESS: {
-                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.\n");
-                break;
-            }
-        case ERR_WRONG_REGISTER: {
-                fprintf(stderr, "404; register doesn't exist. Program terminated.\n");    
-                break;
-            }
-        case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, "You wanted more than we could give you. Program terminated.\n");    
-                break;
-            }
-        case ERR_CANT_OPEN_FILE: {
-            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.\n");    
-            break;
-        }         
-    }
-    printf("\n");
-    exit(EXIT_FAILURE);
-    return ERROR;
-}
-
-int error_file(int error_code, char * filename){
-    fprintf(stderr, "Problem with file: %s\n", filename); 
-    error(error_code);
-    return ERROR;
-}
+int get_register(struct IMPSS*, int);
+int set_register(struct IMPSS*, int, int);
+int get_memory(struct IMPSS*, int);
+int set_memory(struct IMPSS*, int, int);
 
 /*
  * Returns 32 bits from memory.
@@ -109,10 +73,8 @@ int get_memory(struct IMPSS* state, int address){
         value <<= 8;
         value += (state -> memory[address] & 0x000000FF);
         address++;
-        //printf("%.2x ", state -> memory[address + i]); //r
     }
     
-    //printf("\n%.8x\n", value); //r
     return value;
 }
 
@@ -172,6 +134,47 @@ int set_register(struct IMPSS* state, int reg_num, int value){
 }
 
 /*
+ * Handles error codes.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+
+int error(int error_code){
+    
+    switch(error_code){
+        case ERR_UNDEFINED_OPERATION: {
+                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.\n");    
+                break;
+            }
+        case ERR_ILLEGAL_MEMORY_ACCESS: {
+                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.\n");
+                break;
+            }
+        case ERR_WRONG_REGISTER: {
+                fprintf(stderr, "404; register doesn't exist. Program terminated.\n");    
+                break;
+            }
+        case ERR_NOT_ENOUGH_MEMORY: {
+                fprintf(stderr, "You wanted more than we could give you. Program terminated.\n");    
+                break;
+            }
+        case ERR_CANT_OPEN_FILE: {
+            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.\n");    
+            break;
+        }         
+    }
+    printf("\n");
+    exit(EXIT_FAILURE);
+    return ERROR;
+}
+
+int error_file(int error_code, char * filename){
+    fprintf(stderr, "Problem with file: %s\n", filename); 
+    error(error_code);
+    return ERROR;
+}
+
+/*
  * Validates opcode.
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
@@ -195,7 +198,7 @@ int ble(struct IMPSS* state, int body){
 	
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);	
+	int immediate = signed_extension(body & M_IMM);	
 			
 	if(get_register(state, r1) <= get_register(state, r2)){
 		state -> PC = state -> PC + (immediate << 2);
@@ -215,7 +218,7 @@ int bge(struct IMPSS* state, int body){
     
     int r1 = (body & (M_REGISTER << 21)) >> 21;
     int r2 = (body & (M_REGISTER << 16)) >> 16;
-    int immediate = sign_extension(body & M_IMM);						
+    int immediate = signed_extension(body & M_IMM);						
     
     if(get_register(state, r1) >= get_register(state, r2)){
         state -> PC = state -> PC + (immediate << 2);
@@ -231,7 +234,7 @@ int beq(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	if(get_register(state, r1) == get_register(state, r2)){
 		state -> PC = state -> PC + (immediate << 2);
@@ -245,7 +248,7 @@ int bne(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	if(get_register(state, r1) != get_register(state, r2)){
 		state -> PC = state -> PC + (immediate << 2);
@@ -259,7 +262,7 @@ int blt(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	if(get_register(state, r1) < get_register(state, r2)){
 		state -> PC = state -> PC + (immediate << 2);
@@ -273,7 +276,7 @@ int bgt(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	if(get_register(state, r1) > get_register(state, r2)){
 		state -> PC = state -> PC + (immediate << 2);
@@ -342,7 +345,7 @@ int addi(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	set_register(state, r1, get_register(state, r2) + immediate);
 	state -> PC += 4;
@@ -359,7 +362,7 @@ int subi(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	set_register(state, r1, get_register(state, r2) - immediate);
 	state -> PC += 4;
@@ -376,7 +379,7 @@ int muli(struct IMPSS* state, int body){
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	set_register(state, r1, get_register(state, r2) * immediate);
 	state -> PC += 4;
@@ -392,13 +395,13 @@ int muli(struct IMPSS* state, int body){
 int halt(struct IMPSS* state, int body){
     state -> PC += 4;
 
-    printf("Regsiters:\n");
+    printf("\nRegisters:\n");
     int i;
     
-    printf("PC: %d (%#x)\n", state -> PC, state -> PC);
+    printf("PC : %10d (%#.8x)\n", state -> PC, state -> PC);
     
     for(i = 0; i < NUMBER_OF_REGISTERS; i++){
-        printf("$%d: %d (%#x)\n", i, get_register(state, i), get_register(state, i));
+        printf("$%-2d: %10d (0x%.8x)\n", i, get_register(state, i), get_register(state, i));
     }
     
     return HALT;
@@ -473,7 +476,7 @@ int lw(struct IMPSS* state, int body) {
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
 	state -> PC += 4;
@@ -492,7 +495,7 @@ int sw(struct IMPSS* state, int body) {
 
 	int r1 = (body & (M_REGISTER << 21)) >> 21;
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
+	int immediate = signed_extension(body & M_IMM);
 
 	set_memory(state, get_register(state, r2) + immediate, get_register(state, r1));
 	state -> PC += 4;
@@ -570,51 +573,19 @@ int arraysize(char *filename){
 }
 // Binary Reader END
 
-/*
- * Converts between endiness.
- * 
+/* 
+ * Extends 16bit number to 32 signed integer. 
+ *
  * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return 32 signed integer
  */
-int letobe(int l){
-    int b = 0;
-    int i;
-    
-    int mask = 0x0000FF;
-    
-    /*for(i = 0; i < 32; i++){
-        b = (b << 1) | ((l & ((1 << 31) >> i)) >> (31 - i));
-    }*/
-    /*for(i = 0; i < 4; i++){
-        b = (b << 8) | ();
-    }*/
-    
-    /*printf("l %#.8x\n",l);
-    printf("b %#.8x\n",b); 
-    b = (b << 8) | ((l & 0x000000FF));
-    printf("b %#.8x\n",b); 
-    b = (b << 8) | ((l & 0x0000FF00) >> 8);
-    printf("b %#.8x\n",b);
-    b = (b << 8) | ((l & 0x00FF0000) >> 16); 
-    printf("b %#.8x\n",b);
-    b = (b << 8) | ((l & 0xFF000000) >> 24);
-    
-    
-    printf("b %#.8x\n\n",b);*/    
-    
-    
-    return l;
-}
-
-int sign_extension(int instr){
-    return instr;
-    
-    int value = (0x0000FFFF & instr);
+int signed_extension(int in){
+    int r = (0x0000FFFF & in);
     int mask = 0x00008000;
-    int sign = (mask & instr) >> 15;
-    if (sign == 1)
-        value += 0xFFFF0000;
-    
-    return value;
+    if (mask & in) {
+        r += 0xFFFF0000;
+    }
+    return r;
 }
 
 /*
@@ -623,8 +594,6 @@ int sign_extension(int instr){
  * @author Piotr Bar
  */
 int main(int argc, char *argv[]){
-    letobe(0xFF000000);
-	
 	int *instructions = NULL;
 	char filename[100];
 	strcpy(filename,argv[1]);
@@ -633,48 +602,26 @@ int main(int argc, char *argv[]){
 	//For tests: writes to the file test.txt
 	//binarywriter(filename,instructions, ninstructions);
 	
-/*
- * Initialising state of IMPS.
- */
+    /*
+     * Initialising state of IMPS.
+     */
 	struct IMPSS impss;
 	struct IMPSS *state = &impss;
 
 	int j;
 	state -> PC = 0;
-	
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
 		state -> registers[j] = 0;
 	}
-	
 	for(j=0; j < SIZE_OF_MEMORY; ++j){
 		state -> memory[j] = 0;
 	}
-	
-	set_memory(state, 4, 0x00DD0000);
-	set_memory(state, 8, 0x0000DD00);
-	set_memory(state, 12, 0xFF00C79F);
-	set_memory(state, 16, 0xFF00C79F);
-	set_memory(state, 20, 0xFF00C79F);
-	
-	printf("T %#.8x\n", -7);
-	printf("T %#.8x\n", sign_extension(-7));
-	
-	printf("%#.8x\n", get_memory(state, 4));
-	printf("%#.8x\n", get_memory(state, 8));
-	printf("%#.8x\n", get_memory(state, 12));
-	printf("%#.8x\n", get_memory(state, 16));
-	printf("%#.8x\n", get_memory(state, 20));
-	
-	struct IMPSS state_copy;
-	state_copy = impss;
 		
 	for(j = 0; j < ninstructions; j++){
-	    set_memory(state, j*4, letobe(instructions[j]));
-	    //printf("\nM: %d - %d (%#x)\n", j*4, (letobe(instructions[j]) & (M_OPCODE << 26)) >> 26, letobe(instructions[j]));
-	    //printf("M: %d - %d (%#x)\n", j*4, (get_memory(state, j*4) & (M_OPCODE << 26)) >> 26, get_memory(state, j*4));
+	    set_memory(state, j*4, instructions[j]);
 	}
+	
 	free(instructions);
-
 
 	OpCodeFunction OpCodeToFunction[18];
 
@@ -697,45 +644,12 @@ int main(int argc, char *argv[]){
 	OpCodeToFunction[16] = &jr;
 	OpCodeToFunction[17] = &jal;
 
-	// EMULATOR LOOP
-	// data section - niepotrzebne (tak mi sie wydaje, sorry :/)
-	//state -> PC = (get_memory(state, 0) & M_ADDRESS);	
-	/*int i;
-	printf("DATA:\n"); //r
-	for(i = 4; i < (state -> PC); i += 4){
-		printf("D: %d \n", get_memory(state, i));//r
-	}*/
-	// instructions section
-	printf("\nINSTRUCTIONS:\n"); //r
-	while(1){
-	    printf("IN: %#x\n", get_memory(state, state->PC));
+    int result = SUCCESS;
+	while(result != HALT){
 		int index = (get_memory(state, state->PC) & (M_OPCODE << 26)) >> 26;
-		printf("OP: %d PC %d\n", index, state -> PC);//r
-		int result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, state -> PC));
-		if(result == HALT) break;
-		/*for(j = 0; j < ninstructions; j++){
-	    //set_memory(state, j*4, letobe(instructions[j]));
-	        printf("M: %d - %d (%#x)\n", j*4, (get_memory(state, j*4) & (M_OPCODE << 26)) >> 26, get_memory(state, j*4));
-	    }*/
+		result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, state -> PC));
 	}
-			
-	
-	/*printf("%d\n", (0x01080000 & (M_REGISTER << 21)) >> 21);
-	printf("%d\n", (0x01080000 & (M_REGISTER << 16)) >> 16);
-	printf("%d\n", (0x01084000 & (M_REGISTER << 11)) >> 11);
-	printf("%d\n", (0x01080000 & M_IMM));
-	printf("%d\n", (0x01080000 & M_ADDRESS));*/
-	/*
-	int i;
-	for(i = 1; i < 18; i++){
-	    printf("\nI - %d\n", i);
-	    state_copy2 = state_copy;
-	    (*OpCodeToFunction[i])(&state_copy, 0x32478123);
-	    halt(&state_copy, 0);
-	}
-	*/
-		
-	printf("\n");
+
 	return 0;
 }
 
