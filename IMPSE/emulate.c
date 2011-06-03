@@ -318,7 +318,7 @@ int muli(struct IMPSS* state, int body){
 /*
  * Stores contents of memory address determined by R2 + constant in R1
  *
- * @instruction-type R
+ * @instruction-type I
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
 int lw(struct IMPSS* state, int body) {
@@ -337,7 +337,7 @@ int lw(struct IMPSS* state, int body) {
 /*
  * Copies contents of R1 to a memory location determined by contents of R2 + constant
  *
- * @instruction-type R
+ * @instruction-type I
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
 int sw(struct IMPSS* state, int body) {
