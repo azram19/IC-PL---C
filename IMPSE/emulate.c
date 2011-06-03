@@ -545,7 +545,7 @@ int jal(struct IMPSS* state, int body){
 }
 
 /*
- * OpCodeFunction is a function pointer and points to function
+ * OpCodeFunction is a function pointer and points to a function
  * which takes IMPSS* and int as arguments and returns an int
  */
 
@@ -555,6 +555,7 @@ typedef int (*OpCodeFunction)(struct IMPSS*, int);
  * Method createarray takes an argument 'ninstructions' and allocates
  * memory for appropriate number of instructions. All instructions 
  * are initialised with value 0. It returns a pointer to an array of ints.
+ *
  * @author Piotr Bar
  */
 int * createarray(int ninstructions){
@@ -575,6 +576,7 @@ int * createarray(int ninstructions){
  * of instructions and a number of instructions. It reads instructions from a
  * file and puts them in the array of ints. Function returns a pointer to the
  * modified array.
+ *
  * @author Piotr Bar
  */
 int * binaryreader(char *filename, int *instructions, int ninstructions){
@@ -589,6 +591,7 @@ int * binaryreader(char *filename, int *instructions, int ninstructions){
 /*
  * Arraysize takes a filename as an argument and finds the number of 
  * instructions in a file. It returns an int ninstructions.
+ *
  * @author Piotr Bar
  */
 int arraysize(char *filename){
@@ -621,6 +624,7 @@ int signed_extension(int in){
 
 /*
  * Main
+ *
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  * @author Piotr Bar
  */
