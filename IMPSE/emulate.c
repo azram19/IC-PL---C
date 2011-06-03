@@ -530,27 +530,12 @@ int jal(struct IMPSS* state, int body){
 
 typedef int (*OpCodeFunction)(struct IMPSS*, int);  
 
-// Binary Reader START
-//For tests
-void print_bits(int x){
-	int i;
-	int mask = 1 << 31;
-	for(i=1;i<=32;i++){
-		if((x & mask) == 0) printf("0"); else printf("1");
-		if(i==16) printf(" ");
-		x = x << 1;
-	}
-	printf("\n");
-}
-//For tests
-void print(int *instructions, int ninstructions){
-	int i;
-	printf("%d", ninstructions);
-	for(i=0;i<ninstructions;i++){
-		print_bits(instructions[i]);
-	}
-}
-
+/*
+ * Method createarray takes an argument 'ninstructions' and allocates
+ * memory for appropriate number of instructions. All instructions 
+ * are initialised with value 0. It returns a pointer to an array of ints.
+ * @author Piotr Bar
+ */
 int * createarray(int ninstructions){
 	int *instructions = malloc(ninstructions*sizeof(int));
 	if(instructions==NULL){
@@ -564,6 +549,13 @@ int * createarray(int ninstructions){
 	return instructions;
 }
 
+/*
+ * Binaryreader takes 3 arguments, pointer to filename, pointer to an array
+ * of instructions and a number of instructions. It reads instructions from a
+ * file and puts them in the array of ints. Function returns a pointer to the
+ * modified array.
+ * @author Piotr Bar
+ */
 int * binaryreader(char *filename, int *instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "rb");
 	instructions = (int *) createarray(ninstructions);
@@ -572,13 +564,12 @@ int * binaryreader(char *filename, int *instructions, int ninstructions){
 	fclose(fileptr);
 	return instructions;
 }
-//For tests
-void binarywriter(char *filename, int *instructions, int ninstructions){
-	FILE *fileptr = fopen("test.txt", "wb");
-	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
-	fclose(fileptr);
-}
 
+/*
+ * Arraysize takes a filename as an argument and finds the number of 
+ * instructions in a file. It returns an int ninstructions.
+ * @author Piotr Bar
+ */
 int arraysize(char *filename){
 	FILE *fileptr = fopen(filename, "rb");
 	if (fileptr == NULL) {
@@ -591,7 +582,7 @@ int arraysize(char *filename){
 	fclose(fileptr);
 	return ninstructions;
 }
-// Binary Reader END
+
 
 /* 
  * Extends 16bit number to 32 signed integer. 
@@ -619,8 +610,6 @@ int main(int argc, char *argv[]){
 	strcpy(filename,argv[1]);
 	int ninstructions = arraysize(filename);
 	instructions = binaryreader(filename, instructions, ninstructions);
-	//For tests: writes to the file test.txt
-	//binarywriter(filename,instructions, ninstructions);
 	
     /*
      * Initialising state of IMPS.
