@@ -399,6 +399,12 @@ int halt(struct IMPSS* state, int body){
 	return HALT;
 }
 
+/*
+ * Adds contents of R2 and R3 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 int add(struct IMPSS* state, int body){
 	//R type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -412,6 +418,12 @@ int add(struct IMPSS* state, int body){
 	return SUCCESS;
 }
 
+/*
+ * Substitutes contents of R3 from R2 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 int sub(struct IMPSS* state, int body) {
 	//R type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -425,6 +437,12 @@ int sub(struct IMPSS* state, int body) {
 	return SUCCESS;
 }
 
+/*
+ * Multiplies contents of R3 by contents of R2 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 int mul(struct IMPSS* state, int body) {
 	//R type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -438,6 +456,12 @@ int mul(struct IMPSS* state, int body) {
 	return SUCCESS;
 }
 
+/*
+ * Stores contents of memory address determined by R2 + constant in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 int lw(struct IMPSS* state, int body) {
 	//I type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
@@ -451,6 +475,12 @@ int lw(struct IMPSS* state, int body) {
 	return SUCCESS;
 }
 
+/*
+ * Copies contents of R1 to a memory location determined by contents of R2 + constant
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
 int sw(struct IMPSS* state, int body) {
 	//I type function.
 	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
