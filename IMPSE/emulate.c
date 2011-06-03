@@ -56,23 +56,23 @@ int error(int error_code){
     
     switch(error_code){
         case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.\n");    
+                fprintf(stderr, "Error: This operation is not defined.\n");    
                 break;
             }
         case ERR_ILLEGAL_MEMORY_ACCESS: {
-                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.\n");
+                fprintf(stderr, "Error: Illegal memory access.\n");
                 break;
             }
         case ERR_WRONG_REGISTER: {
-                fprintf(stderr, "404; register doesn't exist. Program terminated.\n");    
+                fprintf(stderr, "Error 404: register doesn't exist. Program terminated.\n");    
                 break;
             }
         case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, "You wanted more than we could give you. Program terminated.\n");    
+                fprintf(stderr, "Error: Not enough memory. Program terminated.\n");    
                 break;
             }
         case ERR_CANT_OPEN_FILE: {
-            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.\n");    
+            fprintf(stderr, "Error: Can not open the file. Program terminated.\n");    
             break;
         }         
     }
