@@ -587,7 +587,8 @@ int main(int argc, char *argv[]){
 		
 	for(j = 0; j < ninstructions; j++){
 	    set_memory(state, j*4, letobe(instructions[j]));
-	    printf("M: %d - %d (%#x)\n", j*4, (letobe(instructions[j]) & (M_OPCODE << 26)) >> 26, letobe(instructions[j]));
+	    //printf("\nM: %d - %d (%#x)\n", j*4, (letobe(instructions[j]) & (M_OPCODE << 26)) >> 26, letobe(instructions[j]));
+	    printf("M: %d - %d (%#x)\n", j*4, (get_memory(state, j*4) & (M_OPCODE << 26)) >> 26, get_memory(state, j*4));
 	}
 	//free(instructions);
 
