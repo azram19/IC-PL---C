@@ -185,6 +185,254 @@ int op_code(int op){
     return op;
 }
 
+
+/*
+ * Terminates program, prints registers and program counter.
+ *
+ * @instruction-type N/A
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int halt(struct IMPSS* state, int body){
+    state -> PC += 4;
+
+    printf("Regsiters:\n");
+    int i;
+    
+    printf("PC: %d (%#x)\n", state -> PC, state -> PC);
+    
+    for(i = 0; i < NUMBER_OF_REGISTERS; i++){
+        printf("$%d: %d (%#x)\n", i, get_register(state, i), get_register(state, i));
+    }
+    
+    return HALT;
+}
+
+/*
+ * Adds contents of R2 and R3 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+int add(struct IMPSS* state, int body){
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int r3 = (body & (M_REGISTER << 11)) >> 11;
+
+	set_register(state, r1, get_register(state, r2) + get_register(state, r3));
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Adds immediate value to r2 and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int addi(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	set_register(state, r1, get_register(state, r2) + immediate);
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Substitutes contents of R3 from R2 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+int sub(struct IMPSS* state, int body) {
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int r3 = (body & (M_REGISTER << 11)) >> 11;
+
+	set_register(state, r1, get_register(state, r2) - get_register(state, r3));
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Subtracts immediate value from r2 and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int subi(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	set_register(state, r1, get_register(state, r2) - immediate);
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Multiplies contents of R3 by contents of R2 and stores them in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+int mul(struct IMPSS* state, int body) {
+	//R type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int r3 = (body & (M_REGISTER << 11)) >> 11;
+
+	set_register(state, r1, get_register(state, r2) * get_register(state, r3));
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Multiplicates r2 by an immediate value and stores result in r1.
+ *
+ * @instruction-type I
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int muli(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	set_register(state, r1, get_register(state, r2) * immediate);
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Stores contents of memory address determined by R2 + constant in R1
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+int lw(struct IMPSS* state, int body) {
+	//I type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Copies contents of R1 to a memory location determined by contents of R2 + constant
+ *
+ * @instruction-type R
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ */
+int sw(struct IMPSS* state, int body) {
+	//I type function.
+	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	set_memory(state, get_register(state, r2) + immediate, get_register(state, r1));
+	state -> PC += 4;
+	return SUCCESS;
+}
+
+/*
+ * Branches if r1 is equal to r2.
+ *
+ * @instruction-type I
+ * @author
+ */
+int beq(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	if(get_register(state, r1) == get_register(state, r2)){
+		state -> PC = state -> PC + (immediate << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+/*
+ * Branches if r1 is not equal to r2.
+ *
+ * @instruction-type I
+ * @author
+ */
+int bne(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	if(get_register(state, r1) != get_register(state, r2)){
+		state -> PC = state -> PC + (immediate << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+/*
+ * Branches if r1 is less than r2.
+ *
+ * @instruction-type I
+ * @author
+ */
+int blt(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	if(get_register(state, r1) < get_register(state, r2)){
+		state -> PC = state -> PC + (immediate << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+/*
+ * Branches if r1 is greater than r2.
+ *
+ * @instruction-type I
+ * @author
+ */
+int bgt(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = sign_extension(body & M_IMM);
+
+	if(get_register(state, r1) > get_register(state, r2)){
+		state -> PC = state -> PC + (immediate << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
 /*
  * Branches if r1 less or equal to r2.
  *
@@ -225,65 +473,6 @@ int bge(struct IMPSS* state, int body){
     
     return SUCCESS;
 }
-
-//------------------
-int beq(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	if(get_register(state, r1) == get_register(state, r2)){
-		state -> PC = state -> PC + (immediate << 2);
-	} else {
-		state -> PC += 4;
-	}
-	return SUCCESS;
-}
-
-int bne(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	if(get_register(state, r1) != get_register(state, r2)){
-		state -> PC = state -> PC + (immediate << 2);
-	} else {
-		state -> PC += 4;
-	}
-	return SUCCESS;
-}
-
-int blt(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	if(get_register(state, r1) < get_register(state, r2)){
-		state -> PC = state -> PC + (immediate << 2);
-	} else {
-		state -> PC += 4;
-	}
-	return SUCCESS;
-}
-
-int bgt(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	if(get_register(state, r1) > get_register(state, r2)){
-		state -> PC = state -> PC + (immediate << 2);
-	} else {
-		state -> PC += 4;
-	}
-	return SUCCESS;
-}
-
-//------------------
 
 /*
  * Jumps to the given address.
@@ -332,172 +521,6 @@ int jal(struct IMPSS* state, int body){
     return SUCCESS;
 }
 
-/*
- * Adds immediate value to r2 and stores result in r1.
- *
- * @instruction-type I
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-int addi(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	set_register(state, r1, get_register(state, r2) + immediate);
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Subtracts immediate value from r2 and stores result in r1.
- *
- * @instruction-type I
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-int subi(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	set_register(state, r1, get_register(state, r2) - immediate);
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Multiplicates r2 by an immediate value and stores result in r1.
- *
- * @instruction-type I
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-int muli(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	set_register(state, r1, get_register(state, r2) * immediate);
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Terminates program, prints registers and program counter.
- *
- * @instruction-type N/A
- * @author Lukasz Koprowski <azram19@gmail.com>
- */
-int halt(struct IMPSS* state, int body){
-    state -> PC += 4;
-
-    printf("Regsiters:\n");
-    int i;
-    
-    printf("PC: %d (%#x)\n", state -> PC, state -> PC);
-    
-    for(i = 0; i < NUMBER_OF_REGISTERS; i++){
-        printf("$%d: %d (%#x)\n", i, get_register(state, i), get_register(state, i));
-    }
-    
-    return HALT;
-}
-
-/*
- * Adds contents of R2 and R3 and stores them in R1
- *
- * @instruction-type R
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-int add(struct IMPSS* state, int body){
-	//R type function.
-	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int r3 = (body & (M_REGISTER << 11)) >> 11;
-
-	set_register(state, r1, get_register(state, r2) + get_register(state, r3));
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Substitutes contents of R3 from R2 and stores them in R1
- *
- * @instruction-type R
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-int sub(struct IMPSS* state, int body) {
-	//R type function.
-	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int r3 = (body & (M_REGISTER << 11)) >> 11;
-
-	set_register(state, r1, get_register(state, r2) - get_register(state, r3));
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Multiplies contents of R3 by contents of R2 and stores them in R1
- *
- * @instruction-type R
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-int mul(struct IMPSS* state, int body) {
-	//R type function.
-	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int r3 = (body & (M_REGISTER << 11)) >> 11;
-
-	set_register(state, r1, get_register(state, r2) * get_register(state, r3));
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Stores contents of memory address determined by R2 + constant in R1
- *
- * @instruction-type R
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-int lw(struct IMPSS* state, int body) {
-	//I type function.
-	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
-	state -> PC += 4;
-	return SUCCESS;
-}
-
-/*
- * Copies contents of R1 to a memory location determined by contents of R2 + constant
- *
- * @instruction-type R
- * @author Lukasz Kmiecik <moa.1991@gmail.com>
- */
-int sw(struct IMPSS* state, int body) {
-	//I type function.
-	//0-5 opcode  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = sign_extension(body & M_IMM);
-
-	set_memory(state, get_register(state, r2) + immediate, get_register(state, r1));
-	state -> PC += 4;
-	return SUCCESS;
-}
 
 
 /*
