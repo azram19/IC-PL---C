@@ -1,3 +1,14 @@
+/*
+ * An IMPS emulator. Simulates the execution of an IMPS binary file on an 
+ * IMPS machine.
+ *
+ * Team:
+ * Agnieszka Szefer
+ * Piotr Bar
+ * Lukasz Kmiecik
+ * Lukasz Koprowski
+ */
+
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
@@ -98,7 +109,8 @@ int set_memory(struct IMPSS* state, int address, int value){
     int i;
     
     for(i = 0; i < 4; i++){
-        state -> memory[address + i] = (value & (mask << (24 - 8*i))) >> (24 - 8*i);
+        state -> memory[address + i] = 
+                (value & (mask << (24 - 8*i))) >> (24 - 8*i);
     }
     
     return value;
@@ -143,23 +155,28 @@ int error(int error_code){
     
     switch(error_code){
         case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, "Error: This operation is not defined.\n");  
+                fprintf(stderr, 
+                        "Error: This operation is not defined.\n");  
                 break;
             }
         case ERR_ILLEGAL_MEMORY_ACCESS: {
-                 fprintf(stderr, "Error: Illegal memory access.\n");
+                 fprintf(stderr, 
+                        "Error: Illegal memory access.\n");
                 break;
             }
         case ERR_WRONG_REGISTER: {
-                fprintf(stderr, "Error 404: register doesn't exist. Program terminated.\n");        
+                fprintf(stderr, 
+                        "Error 404: register doesn't exist. Program terminated.\n");        
                 break;
             }
         case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, "Error: Not enough memory. Program terminated.\n");    
+                fprintf(stderr, 
+                        "Error: Not enough memory. Program terminated.\n");    
                 break;
             }
         case ERR_CANT_OPEN_FILE: {
-                fprintf(stderr, "Error: Can not open the file. Program terminated.\n");    
+                fprintf(stderr, 
+                        "Error: Can not open the file. Program terminated.\n");    
                 break;
         }         
     }
@@ -203,7 +220,8 @@ int halt(struct IMPSS* state, int body){
     printf("PC : %10d (0x%.8x)\n", state -> PC, state -> PC);
     
     for(i = 0; i < NUMBER_OF_REGISTERS; i++){
-        printf("$%-2d: %10d (0x%.8x)\n", i, get_register(state, i), get_register(state, i));
+        printf("$%-2d: %10d (0x%.8x)\n", i, 
+                    get_register(state, i), get_register(state, i));
     }
     
     return HALT;
@@ -331,13 +349,16 @@ int lw(struct IMPSS* state, int body) {
 	int r2 = (body & (M_REGISTER << 16)) >> 16;
 	int immediate = signed_extension(body & M_IMM);
 
-	set_register(state, r1, get_memory(state, get_register(state, r2) + immediate));
+	set_register(state, r1, 
+	                get_memory(state, get_register(state, r2) + immediate));
+	                
 	state -> PC += 4;
 	return SUCCESS;
 }
 
 /*
- * Copies contents of R1 to a memory location determined by contents of R2 + constant
+ * Copies contents of R1 to a memory location determined by contents of 
+ *  R2 + constant
  *
  * @instruction-type I
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
@@ -592,9 +613,8 @@ int arraysize(char *filename){
  */
 int signed_extension(int in){
     int r = (0x0000FFFF & in);
-    int mask = 0x00008000;
-    if (mask & in) {
-        r += 0xFFFF0000;
+    if (0x00008000 & in) {
+        r |= 0xFFFF0000;
     }
     return r;
 }
@@ -656,7 +676,8 @@ int main(int argc, char *argv[]){
     int result = SUCCESS;
 	while(result != HALT){
 		int index = (get_memory(state, state->PC) & (M_OPCODE << 26)) >> 26;
-		result = (*OpCodeToFunction[op_code(index)])(state, get_memory(state, state -> PC));
+		result = (*OpCodeToFunction[op_code(index)])
+		            (state, get_memory(state, state -> PC));
 	}
 
 	return 0;
