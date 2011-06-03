@@ -622,9 +622,8 @@ int arraysize(char *filename){
  */
 int signed_extension(int in){
     int r = (0x0000FFFF & in);
-    int mask = 0x00008000;
-    if (mask & in) {
-        r += 0xFFFF0000;
+    if (0x00008000 & in) {
+        r |= 0xFFFF0000;
     }
     return r;
 }
