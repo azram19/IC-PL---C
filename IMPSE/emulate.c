@@ -143,24 +143,24 @@ int error(int error_code){
     
     switch(error_code){
         case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, "Someone lied to you, we don't have it in our offer. Program terminated.\n");    
+                fprintf(stderr, "Error: This operation is not defined.\n");  
                 break;
             }
         case ERR_ILLEGAL_MEMORY_ACCESS: {
-                fprintf(stderr, "You've just tried to rape a memory, we don't like our memory being raped. Don't ever do it again. Program terminated.\n");
+                 fprintf(stderr, "Error: Illegal memory access.\n");
                 break;
             }
         case ERR_WRONG_REGISTER: {
-                fprintf(stderr, "404; register doesn't exist. Program terminated.\n");    
+                fprintf(stderr, "Error 404: register doesn't exist. Program terminated.\n");        
                 break;
             }
         case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, "You wanted more than we could give you. Program terminated.\n");    
+                fprintf(stderr, "Error: Not enough memory. Program terminated.\n");    
                 break;
             }
         case ERR_CANT_OPEN_FILE: {
-            fprintf(stderr, "We couldn't open it, are you sure you have the right key? Program terminated.\n");    
-            break;
+                fprintf(stderr, "Error: Can not open the file. Program terminated.\n");    
+                break;
         }         
     }
     printf("\n");
@@ -187,7 +187,6 @@ int op_code(int op){
     
     return op;
 }
-
 
 /*
  * Terminates program, prints registers and program counter.
@@ -360,7 +359,7 @@ int sw(struct IMPSS* state, int body) {
  * Branches if r1 is equal to r2.
  *
  * @instruction-type I
- * @author
+ * @author Piotr Bar
  */
 int beq(struct IMPSS* state, int body){
 
@@ -380,7 +379,7 @@ int beq(struct IMPSS* state, int body){
  * Branches if r1 is not equal to r2.
  *
  * @instruction-type I
- * @author
+ * @author Piotr Bar
  */
 int bne(struct IMPSS* state, int body){
 
@@ -397,10 +396,30 @@ int bne(struct IMPSS* state, int body){
 }
 
 /*
+ * Branches if r1 is less than r2.
+ *
+ * @instruction-type I
+ * @author Piotr Bar
+ */
+int blt(struct IMPSS* state, int body){
+
+	int r1 = (body & (M_REGISTER << 21)) >> 21;
+	int r2 = (body & (M_REGISTER << 16)) >> 16;
+	int immediate = signed_extension(body & M_IMM);
+
+	if(get_register(state, r1) < get_register(state, r2)){
+		state -> PC = state -> PC + (immediate << 2);
+	} else {
+		state -> PC += 4;
+	}
+	return SUCCESS;
+}
+
+/*
  * Branches if r1 is greater than r2.
  *
  * @instruction-type I
- * @author
+ * @author Piotr Bar
  */
 int bgt(struct IMPSS* state, int body){
 
@@ -458,28 +477,6 @@ int bge(struct IMPSS* state, int body){
 }
 
 /*
- * Branches if r1 is less than r2.
- *
- * @instruction-type I
- * @author
- */
-int blt(struct IMPSS* state, int body){
-
-	int r1 = (body & (M_REGISTER << 21)) >> 21;
-	int r2 = (body & (M_REGISTER << 16)) >> 16;
-	int immediate = signed_extension(body & M_IMM);
-
-	if(get_register(state, r1) < get_register(state, r2)){
-		state -> PC = state -> PC + (immediate << 2);
-	} else {
-		state -> PC += 4;
-	}
-	return SUCCESS;
-}
-
-//------------------
-
-/*
  * Jumps to the given address.
  * 
  * @instruction-type J
@@ -525,8 +522,6 @@ int jal(struct IMPSS* state, int body){
 
     return SUCCESS;
 }
-
-
 
 /*
  * OpCodeFunction is a function pointer and points to function
