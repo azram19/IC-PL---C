@@ -358,15 +358,16 @@ struct command readToken() {
 
 //-------------PB
 
-struct map_node * assemblerPass1(struct command **commandArray, int size){
-	struct map_node *labelTree = (struct map_node *)malloc(sizeof(struct map_node));
+/*
+ * I don't like this function's name :P, and I moved the creation of a labelTree `up`.
+ */
+void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
 	int i;
-	for(i=0;i<size;i++){
-		if(commandArray[i]->label!=NULL){
+	for(i = 0; i < size; i++){
+		if(commandArray[i]->label != NULL){
 			map_put(labelTree, commandArray[i]->label, 4*i);
 		}
 	}
-	return labelTree;
 }
 
 int * assemblerPass2(struct command **commandArray, struct map_node *labelTree, struct map_node *op_codes_tree, int size){
@@ -407,6 +408,68 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
 }
 
 //-------------PB
+
+/*
+ * Converts srtuct into binary represantation; instruction.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int binary_converter(struct command c){
+    int instr = 0;
+    
+    instr |= (c.opcode << 26);
+    
+    if(c.type == TYPE_J){
+        instr |= c.constantValue;
+    } else if(c.type == TYPE_R){
+        instr |= (co.r1 << 21);
+        instr |= (c.r2 << 16);
+        instr |= (c.r3 << 22);
+    } else if(c.type == TYPE_I){
+        iinstr |= (c.r1 << 21);
+        instr |= (c.r2 << 16);
+        instr |= c.constantValue;
+    }
+    
+    return instr;
+}
+/*
+ * Replaced textual representation of labels to their addresses
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int replace_label(struct map_node * labels, struct command * c){
+    int addr = 0;
+    
+    if(c -> labelValue[0] != NULL && c -> constantValue == 0){
+        addr = map_get(labels, c -> labelValue[0]);
+        if(addr == ERROR){
+            return ERROR;
+        } else{
+            c -> constantValue = addr;
+        }
+    }
+    
+    return SUCCESS;
+}
+
+/*
+ * Converts big endian number to little endian.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int betole(int b){
+    int l = 0;
+    int i;
+    
+    for(i = 0; i < 4; i++){
+        l << 8;
+        l |= b%(1 << 7);
+        b /= (1 << 7);
+    }
+    
+    return l;
+}
 
 int main(int argc, char *argv[]) {
 	struct map_node codes_tree;
@@ -498,6 +561,9 @@ int main(int argc, char *argv[]) {
 			//-----------PB
 		}
 	}
+	
+	
+	
 
     //TEST - map
     struct map_node map_tree;
