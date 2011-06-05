@@ -16,7 +16,7 @@
 #define ERR_REPEATED_LABEL 1
 #define ERR_CANT_OPEN_FILE 2
 
-char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
+char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
 
 char *outputPath;
 
@@ -256,7 +256,7 @@ struct command readToken() {
 			}
 		}
 
-	} else if (registersNumber == 0){
+	} else if (registersNumber == 0 || registersNumber == 5){
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
@@ -310,14 +310,6 @@ int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, i
 void binarywriter(char *filename, int *instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "wb");
 	
-	/*
-	 * Converting from big to little endian.
-	 */
-	int i;
-	for(i = 0; i < ninstructions; i++){
-	    instructions[i] = betole(instructions[i]);
-	}
-	
 	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
 	fclose(fileptr);
 }
@@ -332,7 +324,8 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
 int binary_converter(struct command * c, int i){
     int instr = 0;
     
-    instr |= (c -> opcode << 26);
+    if(c -> type != TYPE_S) instr |= (c -> opcode << 26);
+    
     if(c -> type == TYPE_R){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
@@ -349,7 +342,6 @@ int binary_converter(struct command * c, int i){
     } else {
         instr |= c -> constantValue;
     }
-    printf("%#x\n", instr);
     return instr;
 }
 
@@ -393,7 +385,6 @@ int betole(int b){
 
 int main(int argc, char *argv[]) {
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
-    struct map_node ** nodes_table = (struct map_node **) malloc(sizeof(struct map_node * ));
 
 	op_codes_tree -> key = NULL;
 	op_codes_tree -> left = NULL;
@@ -435,42 +426,39 @@ int main(int argc, char *argv[]) {
 
 			int x;
 			const char EOL = '\n';
-		//	const char EOC = '-'; //end of code;
 
-	//		char lineBuffer[80]; //kurwa paskudne strasznie no ale potrzebuje stringa.
-	//		nieaktualne, wymyslilem cos paskudniejszego, GLOBALNA, STATYCZNA TABLICA, FUCK YEAH
 			int i=0;
 			int j;
 			int line=0;
-//*******************************************************************************************************
-//**********************************************RATUNKU**************************************************
-			struct command commandArray[100];
-//*******************************************************************************************************
-//*******************************************************************************************************
+
+			struct command * commandArray = NULL;
+
 			int nonempty=0;
+			int number_of_commands = 0;
+			
+			while ((x = fgetc(inputFile)) != EOF) {
+			    if(x == '\n') number_of_commands++;
+			}
+			rewind(inputFile);		
+			commandArray = (struct command *) malloc(number_of_commands * sizeof(struct command));
+			
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
                 
-//				if (x == EOL || x == EOC) {
 				if (x == EOL) {
 					//fist we have to check if the line is empty, if it is, fuck passing.
-					for(j=i; j>0; j--){
-						if(str[j]!=' '||str[j]!="\n"||str[j]!="\t"){
+					for(j = i; j > 0; j--){
+						if(str[j]!=' ' || str[j] != "\n" || str[j] != "\t"){
 							nonempty=1;
 						}
 					}
 
-					//pass the line to tokeniser
-					//readToken(str);
-
 					//pass the token to the command Array.
-					if(nonempty)
-					commandArray[line]=readToken();
+					if(nonempty) commandArray[line] = readToken();
 
 					//empty the buffer
-					for (j=i; j > 0; j--) {
-						str[j] = '\0';
-					}
+					memset(str, '\0' ,sizeof(str));
+					
 					nonempty=0;
 					i=0;
 					line++;
@@ -486,13 +474,14 @@ int main(int argc, char *argv[]) {
                         //-----------PB
 
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
-			assemblerPass1(labelTree, commandArray, line);
-			int *bitArray = assemblerPass2(labelTree, commandArray, line);
-			binarywriter(outputPath, bitArray, line);		
+			assemblerPass1(labelTree, commandArray, number_of_commands);
+			int *bitArray = assemblerPass2(labelTree, commandArray, number_of_commands);
+			binarywriter(outputPath, bitArray, number_of_commands);		
 					
 			//-----------PB
-		    //free(labelTree);
-			//free(bitArray);
+		    free(labelTree);
+			free(bitArray);
+			free(op_codes_tree);
 		}
 	}
 	
