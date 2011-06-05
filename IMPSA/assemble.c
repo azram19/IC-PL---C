@@ -124,7 +124,7 @@ struct command {
 	int r3;
 
 	int constantValue;
-	char labelValue[16];
+	char * labelValue;
 };
 
 /*
@@ -142,12 +142,8 @@ struct command readToken() {
 
 	char delims[] = " \t";
 	char * tokenField;
-	printf("Splitting line \"%s\" into tokens:\n", str);
-
-
 
 	tokenField = strtok(str, delims);
-	printf ("%s\n",tokenField);
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -161,7 +157,6 @@ struct command readToken() {
 		}
 		//jump straight to next token
 		tokenField = strtok(NULL, delims);
-		printf ("2nd %s\n",tokenField);
 	}
 	//next thing HAS TO BE an opcode
 
@@ -170,8 +165,8 @@ struct command readToken() {
 
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-    memset(token -> labelValue, '\0', sizeof(token -> labelValue));
-
+    token -> labelValue = NULL;
+    
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
 	 * I (2)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 31 Immediate value
@@ -207,15 +202,14 @@ struct command readToken() {
 	} else if (registersNumber == 2) {
 		token->r1 = reg_char_to_int(tokenField);
 		tokenField = strtok(NULL, delims);
-		printf ("%s\n",tokenField);
 		token->r2 = reg_char_to_int(tokenField);
 		//next thing will be an immediatevalue/labelvalue
 
 		//jump!
 		tokenField = strtok(NULL, delims);
-		printf ("%s\n",tokenField);
 		if (isalpha(tokenField[0])) {
 			//this is a label
+			token -> labelValue = (char *) malloc(16 * sizeof(char));
 			for (i = 0; i < 16; i++) {
 				token->labelValue[i] = tokenField[i];
 			}
@@ -227,6 +221,7 @@ struct command readToken() {
 	} else if (registersNumber == 0){
 		if (isalpha(tokenField[0])) {
 			//this is a label
+			token -> labelValue = (char *) malloc(16 * sizeof(char));
 			for (i = 0; i < 16; i++) {
 				token->labelValue[i] = tokenField[i];
 			}
@@ -235,11 +230,6 @@ struct command readToken() {
 			token->constantValue = atoi(tokenField);
 		}
 	}
-
-	puts("puts działa");
-	printf("a printf nie");
-	
-	printf("type: %d opcode: %d r1: $%d r2: $%d r3: %d immValu: %d immLabel %s\n",token->type,token->opcode,token->r1,token->r2,token->r3,token->constantValue,token->labelValue);
 
 	//now we have a complete token.
 	return *token;
@@ -261,13 +251,11 @@ void assemblerPass1(struct map_node * labelTree, struct command *commandArray, i
 
 int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
 	printf("AP2\n");
-	//int *bitArray = (int *)malloc(size*sizeof(int));
+	int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
 	for(i = 0; i < size; i++){
-	    printf("Op %d\n", commandArray[i].opcode);
-	    replace_label(labelTree, commandArray[i]);
-	    printf("%d\n", i);
-	    //bitArray[i] = binary_converter(commandArray[i]);
+	    replace_label(labelTree, &commandArray[i]);
+	    bitArray[i] = binary_converter(&commandArray[i], i);
 	
 		/*if(commandArray[i]->type==TYPE_J){
 			bitArray[i]=(commandArray[i]->opcode << 26);
@@ -320,30 +308,30 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int binary_converter(struct command * c){
+int binary_converter(struct command * c, int i){
     int instr = 0;
     
     instr |= (c -> opcode << 26);
-    printf("IOP: %d", instr);
     if(c -> type == TYPE_R){
-        instr |= (c -> r1 << 21);printf("IR1: %d", instr);
-        instr |= (c -> r2 << 16);printf("IR2: %d", instr);
-        instr |= (c -> r3 << 22);printf("IR3: %d", instr);
+        instr |= (c -> r1 << 21);
+        instr |= (c -> r2 << 16);
+        instr |= (c -> r3 << 22);
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
         
         if(c -> opcode <= 14 && c -> opcode >= 9){
-            
+            instr |= (c -> constantValue - (i<<2)) >> 2;
         } else {
             instr |= c -> constantValue;
         }
     } else {
         instr |= c -> constantValue;
     }
-    printf("I%d", instr);
+    printf("%#x\n", instr);
     return instr;
 }
+
 /*
  * Replaced textual representation of labels to their addresses
  *
@@ -352,19 +340,14 @@ int binary_converter(struct command * c){
 int replace_label(struct map_node * labels, struct command * c){
     int addr = 0;
     
-    char emptyString[16];
-    memset(emptyString, '\0', sizeof(emptyString));
-    
-    if(0){
-       
+    if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
-        printf("AD: %s - %d\n", c -> labelValue, addr);
         if(addr == ERROR){
             return ERROR;
         } else{
             c -> constantValue = addr;
         }
-    } else printf("NIE MA CO ZASTAPIC\n");
+    }
     
     return SUCCESS;
 }
@@ -445,7 +428,7 @@ int main(int argc, char *argv[]) {
 			struct command commandArray[100];
 //*******************************************************************************************************
 //*******************************************************************************************************
-			int empty=0;
+			int nonempty=0;
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
                 
@@ -483,12 +466,8 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
-			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
-			printf("L %s\n", commandArray[6].labelValue);		
+			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
 			assemblerPass1(labelTree, commandArray, line);
-			printf("AP1ED\n");
-			printf("START %d\n", map_get(labelTree, "start"));
-			printf("DATA %d\n", map_get(labelTree, "data"));
 			int *bitArray = assemblerPass2(labelTree, commandArray, line);
 			//binarywriter(outputPath, bitArray, line);		
 					
@@ -498,25 +477,5 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	
-	
-
-    //TEST - map
-    struct map_node map_tree;
-	struct map_node * map = &map_tree;
-
-	map -> key = NULL;
-	map -> left = NULL;
-	map -> right = NULL;
-
-    map_put(map, "pies", 14);
-    map_put(map, "awpies", 14);
-    map_put(map, "dspsdies", 14);
-    map_put(map, "apifdes", 14);
-    map_put(map, "awpifdfes", 14);
-    int m = map_get(map, "pies");
-
-	printf("MAP %s : %d\n", "pies", m);
-    printf("MAP %s : %d\n", "pies",  map_get(map, "apifdes"));
 	return 0;
 }
