@@ -194,7 +194,7 @@ int op_char_to_int(char * op_code) {
 }
 
 int op_to_type(int op_code) {
-	int op_type[18] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
+	int op_type[20] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
 			TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I,
 			TYPE_I, TYPE_J, TYPE_R, TYPE_J, TYPE_S, TYPE_S };
 	return op_type[op_code];
@@ -371,10 +371,13 @@ void assemblerPass1(struct map_node * labelTree, struct command **commandArray, 
 	}
 }
 
-int * assemblerPass2(struct command **commandArray, struct map_node *labelTree, struct map_node *op_codes_tree, int size){
+int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, int size){
 	int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
-	for(i=0;i<size;i++){
+	for(i=0; i<size; i++){
+	    replace_label(labelTree, commandArray[i]);
+	    //bitArray[i] = binary_converter(commandArray[i]);
+	
 		if(commandArray[i]->type==TYPE_J){
 			bitArray[i]=(commandArray[i]->opcode << 26);
 			if(commandArray[i]->labelValue!=NULL){
@@ -404,6 +407,15 @@ int * assemblerPass2(struct command **commandArray, struct map_node *labelTree, 
 
 void binarywriter(char *filename, int *instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "wb");
+	
+	/*
+	 * Converting from big to little endian.
+	 */
+	int i;
+	for(i = 0; i < ninstructions; i++){
+	    instructions[i] = betole(instructions[i]);
+	}
+	
 	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
 	fclose(fileptr);
 }
@@ -415,23 +427,21 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int binary_converter(struct command c){
+int binary_converter(struct command * c){
     int instr = 0;
     
-    instr |= (c.opcode << 26);
+    instr |= (c -> opcode << 26);
     
-    if(c.type == TYPE_J){
-        instr |= c.constantValue;
-    } else if(c.type == TYPE_R){
-        instr |= (co.r1 << 21);
-        instr |= (c.r2 << 16);
-        instr |= (c.r3 << 22);
-    } else if(c.type == TYPE_I){
-        iinstr |= (c.r1 << 21);
-        instr |= (c.r2 << 16);
-        instr |= c.constantValue;
-    } else if(c.type == TYPE_S){
-        instr |= c.constantValue;
+    if(c -> type == TYPE_R){
+        instr |= (c -> r1 << 21);
+        instr |= (c -> r2 << 16);
+        instr |= (c -> r3 << 22);
+    } else if(c -> type == TYPE_I){
+        instr |= (c -> r1 << 21);
+        instr |= (c -> r2 << 16);
+        instr |= c -> constantValue;
+    } else {
+        instr |= c -> constantValue;
     }
     
     return instr;
@@ -445,7 +455,7 @@ int replace_label(struct map_node * labels, struct command * c){
     int addr = 0;
     
     if(c -> labelValue[0] != NULL && c -> constantValue == 0){
-        addr = map_get(labels, c -> labelValue[0]);
+        addr = map_get(labels, &(c -> labelValue[0]));
         if(addr == ERROR){
             return ERROR;
         } else{
@@ -558,10 +568,17 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 			struct command **commandArrayptr = (struct command **)&commandArray[0];
-			struct map_node * labelTree = assemblerPass1(commandArrayptr, line);
-			int *bitArray = assemblerPass2(commandArrayptr, labelTree, op_codes_tree, line);
+			
+			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
+			
+			assemblerPass1(labelTree, commandArrayptr, line);
+			
+			int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
 			binarywriter(outputPath, bitArray, line);		
+					
 			//-----------PB
+		    free(labelTree);
+			free(bitArray);
 		}
 	}
 	
