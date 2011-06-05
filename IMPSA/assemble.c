@@ -240,50 +240,23 @@ struct command readToken() {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command *commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i]->label != NULL){
-			map_put(labelTree, commandArray[i]->label, 4*i);
+		if(commandArray[i].label != NULL){
+			map_put(labelTree, commandArray[i].label, 4*i);
 		}
 	}
 }
 
-int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, int size){
-	printf("AP2\n");
+int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
 	int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
 	for(i = 0; i < size; i++){
 	    replace_label(labelTree, &commandArray[i]);
 	    bitArray[i] = binary_converter(&commandArray[i], i);
-	
-		/*if(commandArray[i]->type==TYPE_J){
-			bitArray[i]=(commandArray[i]->opcode << 26);
-			if(commandArray[i]->labelValue!=NULL){
-				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
-			} else {
-				bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
-			}
-		} else if(commandArray[i]->type==TYPE_I){
-			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16));
-			if(commandArray[i]->opcode<=14 && commandArray[i]->opcode>=9){
-				if(commandArray[i]->labelValue!=NULL){
-					bitArray[i] = bitArray[i] | ((map_get(labelTree, commandArray[i]->labelValue))-(i<<2))>>2;
-				} else {
-					bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
-				}
-			} else if(commandArray[i]->labelValue!=NULL){
-				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
-			} else {
-				bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
-			}
-		} else if(commandArray[i]->type==TYPE_R){
-			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16) | (commandArray[i]->r2 << 11));
-		}*/
-	//	printf("%x", bitArray[i]);
     }
-	//return bitArray;
-    return NULL;
+	return bitArray;
 }
 
 void binarywriter(char *filename, int *instructions, int ninstructions){
@@ -399,8 +372,6 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, ".fill", 18);
 	map_put(op_codes_tree, ".skip", 19);
     
-    printf("%d\n", map_get(op_codes_tree, "jmp"));
-    
 	if (argc != 3) {
 		printf("usage: %s filename", argv[0]);
 	} else {
@@ -466,16 +437,10 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
-			struct command **commandArrayptr = (struct command **)malloc(line*sizeof(struct command *));
-			
-			for (i=0; i<line; i++){
-				commandArrayptr[i] = (struct command *)malloc(sizeof(struct command));
-			}
-
-			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
-			assemblerPass1(labelTree, commandArrayptr, line);
-			int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
-			//binarywriter(outputPath, bitArray, line);		
+    		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
+			assemblerPass1(labelTree, commandArray, line);
+			int *bitArray = assemblerPass2(labelTree, commandArray, line);
+			binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
 		    //free(labelTree);
