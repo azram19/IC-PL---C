@@ -3,11 +3,11 @@
 #include<string.h>
 #include<ctype.h>
 
-#define TYPE_NA 0
+#define TYPE_NA 4
 #define TYPE_J 1
 #define TYPE_I 2
 #define TYPE_R 3
-#define TYPE_S 4
+#define TYPE_S 5
 
 #define SUCCESS 1
 #define HALT 0
@@ -226,7 +226,7 @@ struct command readToken() {
 			token->constantValue = atoi(tokenField);
 		}
 
-	} else {
+	} else if (registersNumber == 0){
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			for (i = 0; i < 16; i++) {
