@@ -447,7 +447,7 @@ int main(int argc, char *argv[]) {
 
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
-
+                
 //				if (x == EOL || x == EOC) {
 				if (x == EOL) {
 					//pass the line to tokeniser
@@ -473,26 +473,7 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
-            struct command s;
-            
-            //s.label = NULL;
-            s.opcode = 6;
-            s.type = TYPE_I;
-            s.r1 = 0;
-            s.r2 = 1;
-            s.constantValue = 7;
-            
-            commandArray[0] = s;
-            
-            s.opcode = 2;
-            s.type = TYPE_I;
-            s.r1 = 2;
-            s.r2 = 2;
-            s.constantValue = 18;
-            
-            commandArray[1] = s;
-            
-			//struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
+			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 					
 			line = 2;
 			//assemblerPass1(labelTree, commandArray, line);
