@@ -385,6 +385,8 @@ int * assemblerPass2(struct command **commandArray, struct map_node *labelTree, 
 			if(commandArray[i]->opcode<=14 && commandArray[i]->opcode>=9){
 				if(commandArray[i]->labelValue!=NULL){
 					bitArray[i] = bitArray[i] | ((map_get(labelTree, commandArray[i]->labelValue))-(i<<2))>>2;
+				} else {
+					bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
 				}
 			} else if(commandArray[i]->labelValue!=NULL){
 				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
