@@ -253,7 +253,7 @@ struct command readToken() {
 			}
 		}
 
-	} else if (registersNumber == 0){
+	} else if (registersNumber == 0 || registersNumber == 5){
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
