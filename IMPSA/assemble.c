@@ -7,6 +7,7 @@
 #define TYPE_J 1
 #define TYPE_I 2
 #define TYPE_R 3
+#define TYPE_S 4
 
 #define SUCCESS 1
 #define HALT 0
@@ -195,7 +196,7 @@ int op_char_to_int(char * op_code) {
 int op_to_type(int op_code) {
 	int op_type[18] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
 			TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I,
-			TYPE_I, TYPE_J, TYPE_R, TYPE_J };
+			TYPE_I, TYPE_J, TYPE_R, TYPE_J, TYPE_S, TYPE_S };
 	return op_type[op_code];
 }
 
@@ -335,7 +336,7 @@ struct command readToken() {
 			token->constantValue = atoi(tokenField);
 		}
 
-	} else if (registersNumber == 0) {
+	} else {
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			for (i = 0; i < 16; i++) {
@@ -429,6 +430,8 @@ int binary_converter(struct command c){
         iinstr |= (c.r1 << 21);
         instr |= (c.r2 << 16);
         instr |= c.constantValue;
+    } else if(c.type == TYPE_S){
+        instr |= c.constantValue;
     }
     
     return instr;
@@ -497,6 +500,8 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, "jmp", 15);
 	map_put(op_codes_tree, "jr", 16);
 	map_put(op_codes_tree, "jal", 17);
+	map_put(op_codes_tree, ".fill", 18);
+	map_put(op_codes_tree, ".skip", 19);
 
 	if (argc != 3) {
 		printf("usage: %s filename", argv[0]);
