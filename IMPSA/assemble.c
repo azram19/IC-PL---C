@@ -445,22 +445,31 @@ int main(int argc, char *argv[]) {
 			struct command commandArray[100];
 //*******************************************************************************************************
 //*******************************************************************************************************
-
+			int empty=0;
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
                 
 //				if (x == EOL || x == EOC) {
 				if (x == EOL) {
+					//fist we have to check if the line is empty, if it is, fuck passing.
+					for(j=i; j>0; j--){
+						if(str[j]!=' '||str[j]!="\n"||str[j]!="\t"){
+							nonempty=1;
+						}
+					}
+
 					//pass the line to tokeniser
 					//readToken(str);
 
 					//pass the token to the command Array.
+					if(nonempty)
 					commandArray[line]=readToken();
 
 					//empty the buffer
 					for (j=i; j > 0; j--) {
 						str[j] = '\0';
 					}
+					nonempty=0;
 					i=0;
 					line++;
 				} else {
