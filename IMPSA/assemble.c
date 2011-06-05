@@ -483,12 +483,11 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
-			struct command **commandArrayptr = (struct command **)malloc(line*sizeof(struct command *));
+			struct command **struct command **commandArrayptr = (struct command **)malloc(line*sizeof(struct command *));
 			
 			for (i=0; i<line; i++){
 				commandArrayptr[i] = (struct command *)malloc(sizeof(struct command));
 			}
-
 			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 			printf("L %s\n", commandArray[6].labelValue);		
 			assemblerPass1(labelTree, commandArrayptr, line);
