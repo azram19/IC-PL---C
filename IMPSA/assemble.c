@@ -288,11 +288,11 @@ void assemblerPass1(struct map_node * labelTree, struct command *commandArray, i
 	int i;
 	for(i = 0; i < size; i++){
 		if(commandArray[i].label != NULL){
-			if(map_get(labelTree, commandArray[i].label)!=ERROR){
+			/*if(map_get(labelTree, commandArray[i].label)!=ERROR){
 				error(ERR_REPEATED_LABEL);
-			}else{ 
+			}else{ */
 				map_put(labelTree, commandArray[i].label, 4*i);
-			}
+			//}
 		}
 	}
 }
@@ -315,6 +315,15 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
 }
 
 //-------------PB
+/* 
+ * Reduces 32bit signed integer to 16 bit signed integer. 
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return 16 bit signed integer
+ */
+int signed_reduction(int r){
+    return (r & 0x80000000) ? r & (0x0000FFFF) : r;
+}
 
 /*
  * Converts srtuct into binary represantation; instruction.
@@ -335,12 +344,12 @@ int binary_converter(struct command * c, int i){
         instr |= (c -> r2 << 16);
         
         if(c -> opcode <= 14 && c -> opcode >= 9){
-            instr |= (c -> constantValue - (i<<2)) >> 2;
+            instr |= signed_reduction((c -> constantValue - (i<<2)) >> 2);
         } else {
-            instr |= c -> constantValue;
+            instr |= signed_reduction(c -> constantValue);
         }
     } else {
-        instr |= c -> constantValue;
+        instr |= signed_reduction(c -> constantValue);
     }
     return instr;
 }
