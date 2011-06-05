@@ -142,7 +142,7 @@ struct command readToken() {
 	int i;
 
 
-	char delims[] = " ,.-\t";
+	char delims[] = " \t";
 	char * tokenField;
 	printf("Splitting line \"%s\" into tokens:\n", str);
 
@@ -241,7 +241,7 @@ struct command readToken() {
 	puts("puts działa");
 	printf("a printf nie");
 	
-	printf("type: %d opcode: %d r1: $%d r2: $%d r3: %d immValu: %d immLabel %s",token->type,token->opcode,token->r1,token->r2,token->r3,token->constantValue,token->labelValue);
+	printf("type: %d opcode: %d r1: $%d r2: $%d r3: %d immValu: %d immLabel %s\n",token->type,token->opcode,token->r1,token->r2,token->r3,token->constantValue,token->labelValue);
 
 	//now we have a complete token.
 	return *token;
