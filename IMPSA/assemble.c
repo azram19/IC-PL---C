@@ -17,30 +17,15 @@ char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
 
 char *outputPath;
 
-
-
 struct map_node {
 	char * key;
 	int value;
 	int colour;
 	struct map_node * left;
 	struct map_node * right;
-	struct map_node * parent;
 };
 
-struct map_map {
-	struct map_node * root;
-};
-
-struct map_node * op_codes_tree;
-
-
-void rb_insert(struct map_node *, char *, struct map_node *);
-void rb_insert_case1(struct map_node *);
-void rb_insert_case2(struct map_node *);
-void rb_insert_case3(struct map_node *);
-void rb_insert_case4(struct map_node *);
-void rb_insert_case5(struct map_node *);
+struct map_node * op_codes_tree = NULL;
 
 int map_put(struct map_node * root, char * key, int value) {
 	struct map_node * node_ptr = malloc(sizeof(struct map_node));
@@ -61,14 +46,12 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 	} else if (strcmp(root -> key, key) > 0) {
 		if (root -> right == NULL) {
 			root -> right = node;
-			node -> parent = node -> right;
 		} else {
 			tree_insert(root -> right, key, node);
 		}
 	} else {
 		if (root -> left == NULL) {
 			root -> left = node;
-			node -> parent = node -> left;
 		} else {
 			tree_insert(root -> left, key, node);
 		}
@@ -78,7 +61,9 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 }
 
 int map_get(struct map_node * root, char * key) {
-	if (root -> key == NULL) {
+    printf("MAP_GET");
+
+	if (root == NULL || root -> key == NULL) {
 		return ERROR;
 	}
 
@@ -181,11 +166,13 @@ struct command readToken() {
 		printf ("2nd %s\n",tokenField);
 	}
 	//next thing HAS TO BE an opcode
+
+//	token->opcode = 15;
+//	token->type = 2;
+
 	token->opcode = op_char_to_int(tokenField);
 	token->type = op_to_type(token->opcode);
 
-//	token->opcode = 2;
-//	token->type = 2;
 
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -265,23 +252,26 @@ struct command readToken() {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command *commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i] -> label != NULL){
-			map_put(labelTree, commandArray[i]->label, 4*i);
+		if(commandArray[i].label != NULL){
+			map_put(labelTree, commandArray[i].label, 4*i);
 		}
 	}
 }
 
-int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, int size){
-	int *bitArray = (int *)malloc(size*sizeof(int));
+int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
+	printf("AP2\n");
+	//int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
-	for(i=0; i<size; i++){
+	for(i = 0; i < size; i++){
+	    printf("Op %d\n", commandArray[i].opcode);
 	    replace_label(labelTree, commandArray[i]);
+	    printf("%d\n", i);
 	    //bitArray[i] = binary_converter(commandArray[i]);
 	
-		if(commandArray[i]->type==TYPE_J){
+		/*if(commandArray[i]->type==TYPE_J){
 			bitArray[i]=(commandArray[i]->opcode << 26);
 			if(commandArray[i]->labelValue!=NULL){
 				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
@@ -303,10 +293,11 @@ int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, 
 			}
 		} else if(commandArray[i]->type==TYPE_R){
 			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16) | (commandArray[i]->r2 << 11));
-		}
-		printf("%x", bitArray[i]);
+		}*/
+	//	printf("%x", bitArray[i]);
     }
-	return bitArray;
+	//return bitArray;
+    return NULL;
 }
 
 void binarywriter(char *filename, int *instructions, int ninstructions){
@@ -335,11 +326,11 @@ int binary_converter(struct command * c){
     int instr = 0;
     
     instr |= (c -> opcode << 26);
-    
+    printf("IOP: %d", instr);
     if(c -> type == TYPE_R){
-        instr |= (c -> r1 << 21);
-        instr |= (c -> r2 << 16);
-        instr |= (c -> r3 << 22);
+        instr |= (c -> r1 << 21);printf("IR1: %d", instr);
+        instr |= (c -> r2 << 16);printf("IR2: %d", instr);
+        instr |= (c -> r3 << 22);printf("IR3: %d", instr);
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
@@ -352,7 +343,7 @@ int binary_converter(struct command * c){
     } else {
         instr |= c -> constantValue;
     }
-    
+    printf("I%d", instr);
     return instr;
 }
 /*
@@ -363,15 +354,17 @@ int binary_converter(struct command * c){
 int replace_label(struct map_node * labels, struct command * c){
     int addr = 0;
     
-    if(c -> labelValue[0] != NULL && c -> constantValue == 0){
-        addr = map_get(labels, &(c -> labelValue[0]));
-        if(addr == ERROR){
+    if(c -> labelValue == "\0"){
+       
+       // addr = map_get(labels, c -> labelValue);
+        //printf("AD: %d\n", addr);
+        /*if(addr == ERROR){
             return ERROR;
         } else{
             c -> constantValue = addr;
-        }
+        }*/
     }
-    
+    else printf("NIE MA CO ZASTAPIC\n");
     return SUCCESS;
 }
 
@@ -385,7 +378,7 @@ int betole(int b){
     int i;
     
     for(i = 0; i < 4; i++){
-        l << 8;
+        l <<= 8;
         l |= b%(1 << 7);
         b /= (1 << 7);
     }
@@ -394,8 +387,8 @@ int betole(int b){
 }
 
 int main(int argc, char *argv[]) {
-	struct map_node * op_codes_tree = malloc(sizeof(struct map_node));
-    //struct map_node ** nodes_table;
+	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
+    struct map_node ** nodes_table = (struct map_node **) malloc(sizeof(struct map_node * ));
 
 	op_codes_tree -> key = NULL;
 	op_codes_tree -> left = NULL;
@@ -422,6 +415,8 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, ".fill", 18);
 	map_put(op_codes_tree, ".skip", 19);
     
+    printf("%d\n", map_get(op_codes_tree, "jmp"));
+    
 	if (argc != 3) {
 		printf("usage: %s filename", argv[0]);
 	} else {
@@ -437,7 +432,7 @@ int main(int argc, char *argv[]) {
 
 			int x;
 			const char EOL = '\n';
-			const char EOC = '-'; //end of code;
+		//	const char EOC = '-'; //end of code;
 
 	//		char lineBuffer[80]; //kurwa paskudne strasznie no ale potrzebuje stringa.
 	//		nieaktualne, wymyslilem cos paskudniejszego, GLOBALNA, STATYCZNA TABLICA, FUCK YEAH
@@ -450,10 +445,11 @@ int main(int argc, char *argv[]) {
 //*******************************************************************************************************
 //*******************************************************************************************************
 
-			/*while ((x = fgetc(inputFile)) != EOF) {
+			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
 
-				if (x == EOL || x == EOC) {
+//				if (x == EOL || x == EOC) {
+				if (x == EOL) {
 					//pass the line to tokeniser
 					//readToken(str);
 
@@ -470,8 +466,8 @@ int main(int argc, char *argv[]) {
 					str[i] = (char) x;
 					i++;
 				}
-			}*/
-
+			}
+            
 			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
@@ -496,14 +492,14 @@ int main(int argc, char *argv[]) {
             
             commandArray[1] = s;
             
-            
-            struct command **commandArrayptr = (struct command **)&commandArray[0];
-			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
+			//struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 					
 			line = 2;
-			assemblerPass1(labelTree, commandArrayptr, line);
+			//assemblerPass1(labelTree, commandArray, line);
+			printf("AP1ED\n");
 			
-			//int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
+			
+			//int *bitArray = assemblerPass2(labelTree, commandArray, line);
 			//binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
