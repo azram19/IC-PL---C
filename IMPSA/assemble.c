@@ -240,16 +240,16 @@ struct command readToken() {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command *commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i].label != NULL){
-			map_put(labelTree, commandArray[i].label, 4*i);
+		if(commandArray[i]->label != NULL){
+			map_put(labelTree, commandArray[i]->label, 4*i);
 		}
 	}
 }
 
-int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
+int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, int size){
 	printf("AP2\n");
 	int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
@@ -466,9 +466,15 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
+			struct command **commandArrayptr = (struct command **)malloc(line*sizeof(struct command *));
+			
+			for (i=0; i<line; i++){
+				commandArrayptr[i] = (struct command *)malloc(sizeof(struct command));
+			}
+
 			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
-			assemblerPass1(labelTree, commandArray, line);
-			int *bitArray = assemblerPass2(labelTree, commandArray, line);
+			assemblerPass1(labelTree, commandArrayptr, line);
+			int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
 			//binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
