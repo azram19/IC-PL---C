@@ -13,6 +13,9 @@
 #define HALT 0
 #define ERROR -1
 
+#define ERR_REPEATED_LABEL 1
+#define ERR_CANT_OPEN_FILE 2
+
 char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
 
 char *outputPath;
