@@ -352,7 +352,10 @@ int binary_converter(struct command * c){
 int replace_label(struct map_node * labels, struct command * c){
     int addr = 0;
     
-    if((c -> labelValue)[0] == '\0'){
+    char emptyString[16];
+    memset(emptyString, '\0', sizeof(emptyString));
+    
+    if(0){
        
         addr = map_get(labels, c -> labelValue);
         printf("AD: %s - %d\n", c -> labelValue, addr);
