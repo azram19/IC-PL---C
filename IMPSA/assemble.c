@@ -61,8 +61,6 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 }
 
 int map_get(struct map_node * root, char * key) {
-    printf("MAP_GET");
-
 	if (root == NULL || root -> key == NULL) {
 		return ERROR;
 	}
@@ -126,7 +124,7 @@ struct command {
 	int r3;
 
 	int constantValue;
-	char labelValue[];
+	char labelValue[16];
 };
 
 /*
@@ -170,9 +168,9 @@ struct command readToken() {
 //	token->opcode = 15;
 //	token->type = 2;
 
-	token->opcode = op_char_to_int(tokenField);
-	token->type = op_to_type(token->opcode);
-
+	token -> opcode = op_char_to_int(tokenField);
+	token -> type = op_to_type(token->opcode);
+    memset(token -> labelValue, '\0', sizeof(token -> labelValue));
 
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -354,17 +352,17 @@ int binary_converter(struct command * c){
 int replace_label(struct map_node * labels, struct command * c){
     int addr = 0;
     
-    if(c -> labelValue == "\0"){
+    if((c -> labelValue)[0] == '\0'){
        
-       // addr = map_get(labels, c -> labelValue);
-        //printf("AD: %d\n", addr);
-        /*if(addr == ERROR){
+        addr = map_get(labels, c -> labelValue);
+        printf("AD: %s - %d\n", c -> labelValue, addr);
+        if(addr == ERROR){
             return ERROR;
         } else{
             c -> constantValue = addr;
-        }*/
-    }
-    else printf("NIE MA CO ZASTAPIC\n");
+        }
+    } else printf("NIE MA CO ZASTAPIC\n");
+    
     return SUCCESS;
 }
 
@@ -474,13 +472,12 @@ int main(int argc, char *argv[]) {
                         //-----------PB
 
 			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
-					
-			line = 2;
-			//assemblerPass1(labelTree, commandArray, line);
+			printf("L %s\n", commandArray[6].labelValue);		
+			assemblerPass1(labelTree, commandArray, line);
 			printf("AP1ED\n");
-			
-			
-			//int *bitArray = assemblerPass2(labelTree, commandArray, line);
+			printf("START %d\n", map_get(labelTree, "start"));
+			printf("DATA %d\n", map_get(labelTree, "data"));
+			int *bitArray = assemblerPass2(labelTree, commandArray, line);
 			//binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
