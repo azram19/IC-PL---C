@@ -13,7 +13,7 @@
 #define HALT 0
 #define ERROR -1
 
-char str[80]; //Wulgarne, paskudne, nie potrafie inaczej.
+char str[ 256 ]; //Wulgarne, paskudne, nie potrafie inaczej.
 
 char *outputPath;
 
@@ -427,11 +427,9 @@ int main(int argc, char *argv[]) {
 			int i=0;
 			int j;
 			int line=0;
-//*******************************************************************************************************
-//**********************************************RATUNKU**************************************************
+
 			struct command * commandArray = NULL;
-//*******************************************************************************************************
-//*******************************************************************************************************
+
 			int nonempty=0;
 			int number_of_commands = 0;
 			
@@ -453,7 +451,7 @@ int main(int argc, char *argv[]) {
 					}
 
 					//pass the token to the command Array.
-					if(nonempty) commandArray[line] = readToken(str);
+					if(nonempty) commandArray[line] = readToken();
 
 					//empty the buffer
 					memset(str, '\0' ,sizeof(str));
