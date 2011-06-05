@@ -87,6 +87,34 @@ int op_to_type(int op_code) {
 	return op_type[op_code];
 }
 
+int error(int error_code){
+    
+    switch(error_code){
+        case ERR_REPEATED_LABEL: {
+                fprintf(stderr, 
+                        "Error: There are two labels with the same name.\n");  
+                break;
+            }
+        case ERR_CANT_OPEN_FILE: {
+                fprintf(stderr, 
+                        "Error: Can not open the file. Program terminated.\n");    
+                break;
+        }         
+    }
+    printf("\n");
+    exit(EXIT_FAILURE);
+    return ERROR;
+}
+
+int error_file(int error_code, char * filename){
+    fprintf(stderr, "Problem with file: %s\n", filename); 
+    error(error_code);
+    return ERROR;
+}
+
+
+
+
 //❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
 /*
@@ -215,7 +243,14 @@ struct command readToken() {
 			}
 		} else {
 			//this is a constantvalue/address
-			token->constantValue = atoi(tokenField);
+			//it may be in int format, or hex format
+			
+			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+				token->constantValue = strtol (tokenField,NULL,0);
+			}
+			else{
+				token->constantValue = atoi(tokenField);
+			}
 		}
 
 	} else if (registersNumber == 0){
@@ -226,8 +261,14 @@ struct command readToken() {
 				token->labelValue[i] = tokenField[i];
 			}
 		} else {
-			//this is a constantvalue/address
-			token->constantValue = atoi(tokenField);
+			//it may be in int format, or hex format
+			
+			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+				token->constantValue = strtol (tokenField,NULL,0);
+			}
+			else{
+				token->constantValue = atoi(tokenField);
+			}
 		}
 	}
 
@@ -244,7 +285,11 @@ void assemblerPass1(struct map_node * labelTree, struct command *commandArray, i
 	int i;
 	for(i = 0; i < size; i++){
 		if(commandArray[i].label != NULL){
-			map_put(labelTree, commandArray[i].label, 4*i);
+			if(map_get(labelTree, commandArray[i].label)!=ERROR){
+				error(ERR_REPEATED_LABEL);
+			}else{ 
+				map_put(labelTree, commandArray[i].label, 4*i);
+			}
 		}
 	}
 }
@@ -441,3 +486,4 @@ int main(int argc, char *argv[]) {
 	
 	return 0;
 }
+
