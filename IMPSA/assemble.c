@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, "jr", 16);
 	map_put(op_codes_tree, "jal", 17);
 
-	if (argc != 2) {
+	if (argc != 3) {
 		printf("usage: %s filename", argv[0]);
 	} else {
 		FILE *inputFile;
