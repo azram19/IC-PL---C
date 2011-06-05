@@ -360,7 +360,7 @@ struct command readToken() {
 //-------------PB
 
 /*
- * I don't like this function's name :P, and I moved the creation of a labelTree `up`.
+ * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
 void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
 	int i;
@@ -560,9 +560,7 @@ int main(int argc, char *argv[]) {
 			struct command **commandArrayptr = (struct command **)&commandArray[0];
 			struct map_node * labelTree = assemblerPass1(commandArrayptr, line);
 			int *bitArray = assemblerPass2(commandArrayptr, labelTree, op_codes_tree, line);
-			char filename[100];
-			strcpy(filename,argv[2]);
-			binarywriter(filename, bitArray, line);		
+			binarywriter(outputPath, bitArray, line);		
 			//-----------PB
 		}
 	}
