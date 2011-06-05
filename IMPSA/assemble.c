@@ -250,26 +250,26 @@ struct command readToken() {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command *commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i].label != NULL){
-			map_put(labelTree, commandArray[i].label, 4*i);
+		if(commandArray[i]->label != NULL){
+			map_put(labelTree, commandArray[i]->label, 4*i);
 		}
 	}
 }
 
-int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
+int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, int size){
 	printf("AP2\n");
-	//int *bitArray = (int *)malloc(size*sizeof(int));
+	int *bitArray = (int *)malloc(size*sizeof(int));
 	int i;
 	for(i = 0; i < size; i++){
-	    printf("Op %d\n", commandArray[i].opcode);
-	    replace_label(labelTree, commandArray[i]);
-	    printf("%d\n", i);
+	    //printf("Op %d\n", commandArray[i].opcode);
+	    //replace_label(labelTree, commandArray[i]);
+	    //printf("%d\n", i);
 	    //bitArray[i] = binary_converter(commandArray[i]);
 	
-		/*if(commandArray[i]->type==TYPE_J){
+		if(commandArray[i]->type==TYPE_J){
 			bitArray[i]=(commandArray[i]->opcode << 26);
 			if(commandArray[i]->labelValue!=NULL){
 				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
@@ -291,11 +291,11 @@ int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, i
 			}
 		} else if(commandArray[i]->type==TYPE_R){
 			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16) | (commandArray[i]->r2 << 11));
-		}*/
+		}
 	//	printf("%x", bitArray[i]);
     }
-	//return bitArray;
-    return NULL;
+	return bitArray;
+    //return NULL;
 }
 
 void binarywriter(char *filename, int *instructions, int ninstructions){
@@ -480,13 +480,19 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
+			struct command **commandArrayptr = (struct command **)malloc(line*sizeof(struct command *));
+			
+			for (i=0; i<line; i++){
+				commandArrayptr[i] = (struct command *)malloc(sizeof(struct command));
+			}
+
 			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 			printf("L %s\n", commandArray[6].labelValue);		
-			assemblerPass1(labelTree, commandArray, line);
+			assemblerPass1(labelTree, commandArrayptr, line);
 			printf("AP1ED\n");
 			printf("START %d\n", map_get(labelTree, "start"));
 			printf("DATA %d\n", map_get(labelTree, "data"));
-			int *bitArray = assemblerPass2(labelTree, commandArray, line);
+			int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
 			//binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
