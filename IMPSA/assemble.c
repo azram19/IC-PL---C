@@ -248,7 +248,7 @@ struct command readToken() {
 			//this is a constantvalue/address
 			//it may be in int format, or hex format
 			
-			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+			if(tokenField[0] == '0' && tokenField[1] == 'x'){
 				token->constantValue = strtol (tokenField,NULL,0);
 			}
 			else{
@@ -266,7 +266,7 @@ struct command readToken() {
 		} else {
 			//it may be in int format, or hex format
 			
-			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+			if(tokenField[0] == '0' && tokenField[1] == 'x'){
 				token->constantValue = strtol (tokenField,NULL,0);
 			}
 			else{
@@ -338,7 +338,8 @@ int binary_converter(struct command * c, int i){
     if(c -> type == TYPE_R){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
-        instr |= (c -> r3 << 22);
+        instr |= (c -> r3 << 11);
+        //printf("%d %d\n", i, c -> r3);
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
