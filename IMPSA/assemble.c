@@ -451,7 +451,7 @@ int main(int argc, char *argv[]) {
 					//fist we have to check if the line is empty, if it is, fuck passing.
 					for(j=i; j>0; j--){
 						if(str[j]!=' '||str[j]!="\n"||str[j]!="\t"){
-							empty=0;
+							nonempty=1;
 						}
 					}
 
@@ -459,14 +459,14 @@ int main(int argc, char *argv[]) {
 					//readToken(str);
 
 					//pass the token to the command Array.
-					if(!empty)
+					if(nonempty)
 					commandArray[line]=readToken();
 
 					//empty the buffer
 					for (j=i; j > 0; j--) {
 						str[j] = '\0';
 					}
-					empty=0;
+					nonempty=0;
 					i=0;
 					line++;
 				} else {
