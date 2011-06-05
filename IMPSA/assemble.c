@@ -43,8 +43,7 @@ void rb_insert_case4(struct map_node *);
 void rb_insert_case5(struct map_node *);
 
 int map_put(struct map_node * root, char * key, int value) {
-	struct map_node node;
-	struct map_node * node_ptr = &node;
+	struct map_node * node_ptr = malloc(sizeof(struct map_node));
 
 	node_ptr -> key = key;
 	node_ptr -> value = value;
@@ -52,8 +51,6 @@ int map_put(struct map_node * root, char * key, int value) {
 	node_ptr -> right = NULL;
 
 	tree_insert(root, key, node_ptr);
-	//rb_insert(root, key, node_ptr); KUUURRRWAAA!!
-
 	return SUCCESS;
 }
 
@@ -76,103 +73,8 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 			tree_insert(root -> left, key, node);
 		}
 	}
-
+    
 	return SUCCESS;
-}
-
-void tree_rotate_right(struct map_map * map) {
-	struct map_node * root = map -> root;
-	map -> root = map -> root -> left;
-	root -> left = map -> root -> right;
-	map -> root -> right = root;
-}
-
-void tree_rotate_left(struct map_map * map) {
-	struct map_node * root = map -> root;
-	map -> root = map -> root -> right;
-	root -> right = map -> root -> left;
-	map -> root -> left = root;
-}
-
-
-void rb_insert(struct map_node * root, char * key, struct map_node * node) {
-    rb_insert_case1(node);
-}
-
-struct map_node * grandparent(struct map_node * node) {
-	if (node != NULL && node -> parent != NULL) {
-		return node -> parent -> parent;
-	} else {
-		return NULL;
-	}
-}
-
-struct map_node * uncle(struct map_node * node) {
-	struct map_node * g = grandparent(node);
-
-	if (g == NULL) {
-		return NULL;
-	} else if (node -> parent == g -> left) {
-		return g -> right;
-	} else {
-		return g -> left;
-	}
-}
-void rb_insert_case1(struct map_node * node) {
-	if (node -> parent == NULL) {
-        node -> colour = 1;
-    } else {
-	    rb_insert_case2(node);
-    }
-}
-void rb_insert_case2(struct map_node * node) {
-	if (node -> parent -> colour == 1) {
-		return;
-	} else {
-		rb_insert_case3(node);
-	}
-}
-void rb_insert_case3(struct map_node * node) {
-	struct map_node * u = uncle(node), *g;
-
-	if (u != NULL && u -> colour == 2) {
-		node -> parent -> colour = 1;
-		u -> colour = 1;
-		g = grandparent(node);
-		g -> colour = 2;
-	} else {
-		rb_insert_case4(node);
-	}
-}
-void rb_insert_case4(struct map_node * node) {
-	struct map_node * g = grandparent(node);
-	struct map_map m;
-	struct map_map * m_ptr = &m;
-	m.root = node -> parent;
-
- 
-    if ((node == node -> parent -> right) && (node -> parent == g -> left)) {
-        tree_rotate_left(m_ptr);
-        node = node -> left;
-    } else if ((node == node -> parent -> left) && (node -> parent == g -> right)) {
-        tree_rotate_right(m_ptr);
-        node = node -> right;
-    }
-    rb_insert_case5(node);
-}
-void rb_insert_case5(struct map_node * node) {
-    struct map_node * g = grandparent(node);
-	struct map_map m;
-	struct map_map * m_ptr = &m;
-	m.root = g;
- 
-    node -> parent -> colour = 1;
-    g -> colour = 2;
-    if ((node == node -> parent -> left) && (node -> parent == g -> left)) {
-        tree_rotate_right(m_ptr);
-    } else {
-        tree_rotate_left(m_ptr);
-    }
 }
 
 int map_get(struct map_node * root, char * key) {
@@ -180,12 +82,14 @@ int map_get(struct map_node * root, char * key) {
 		return ERROR;
 	}
 
-	if (strcmp(root -> key, key) == 0) {
+    int compare = strcmp(root -> key, key);
+
+	if (compare == 0) {
 		return root -> value;
-	} else if (strcmp(root -> key, key) > 0) {
-		return map_get(root -> left, key);
-	} else {
+	} else if (compare > 0) {
 		return map_get(root -> right, key);
+	} else {
+		return map_get(root -> left, key);
 	}
 }
 
@@ -265,7 +169,6 @@ struct command readToken() {
 
 	int lastCharIndex=(strlen(tokenField))-1;
 	char lastCharacter=tokenField[lastCharIndex];
-
 	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
 	if(lastCharacter==':'){
 		//we have a label;
@@ -365,7 +268,7 @@ struct command readToken() {
 void assemblerPass1(struct map_node * labelTree, struct command **commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i]->label != NULL){
+		if(commandArray[i] -> label != NULL){
 			map_put(labelTree, commandArray[i]->label, 4*i);
 		}
 	}
@@ -401,7 +304,8 @@ int * assemblerPass2(struct map_node *labelTree, struct command **commandArray, 
 		} else if(commandArray[i]->type==TYPE_R){
 			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16) | (commandArray[i]->r2 << 11));
 		}
-	}
+		printf("%x", bitArray[i]);
+    }
 	return bitArray;
 }
 
@@ -439,7 +343,12 @@ int binary_converter(struct command * c){
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
-        instr |= c -> constantValue;
+        
+        if(c -> opcode <= 14 && c -> opcode >= 9){
+            
+        } else {
+            instr |= c -> constantValue;
+        }
     } else {
         instr |= c -> constantValue;
     }
@@ -485,8 +394,8 @@ int betole(int b){
 }
 
 int main(int argc, char *argv[]) {
-	struct map_node codes_tree;
-	op_codes_tree = &codes_tree;
+	struct map_node * op_codes_tree = malloc(sizeof(struct map_node));
+    //struct map_node ** nodes_table;
 
 	op_codes_tree -> key = NULL;
 	op_codes_tree -> left = NULL;
@@ -512,7 +421,7 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, "jal", 17);
 	map_put(op_codes_tree, ".fill", 18);
 	map_put(op_codes_tree, ".skip", 19);
-
+    
 	if (argc != 3) {
 		printf("usage: %s filename", argv[0]);
 	} else {
@@ -541,7 +450,7 @@ int main(int argc, char *argv[]) {
 //*******************************************************************************************************
 //*******************************************************************************************************
 
-			while ((x = fgetc(inputFile)) != EOF) {
+			/*while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
 
 				if (x == EOL || x == EOC) {
@@ -561,24 +470,45 @@ int main(int argc, char *argv[]) {
 					str[i] = (char) x;
 					i++;
 				}
-			}
+			}*/
 
 			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
                         //-----------PB
-			struct command **commandArrayptr = (struct command **)&commandArray[0];
-			
+
+            struct command s;
+            
+            //s.label = NULL;
+            s.opcode = 6;
+            s.type = TYPE_I;
+            s.r1 = 0;
+            s.r2 = 1;
+            s.constantValue = 7;
+            
+            commandArray[0] = s;
+            
+            s.opcode = 2;
+            s.type = TYPE_I;
+            s.r1 = 2;
+            s.r2 = 2;
+            s.constantValue = 18;
+            
+            commandArray[1] = s;
+            
+            
+            struct command **commandArrayptr = (struct command **)&commandArray[0];
 			struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
-			
+					
+			line = 2;
 			assemblerPass1(labelTree, commandArrayptr, line);
 			
-			int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
-			binarywriter(outputPath, bitArray, line);		
+			//int *bitArray = assemblerPass2(labelTree, commandArrayptr, line);
+			//binarywriter(outputPath, bitArray, line);		
 					
 			//-----------PB
-		    free(labelTree);
-			free(bitArray);
+		    //free(labelTree);
+			//free(bitArray);
 		}
 	}
 	
@@ -594,9 +524,13 @@ int main(int argc, char *argv[]) {
 	map -> right = NULL;
 
     map_put(map, "pies", 14);
+    map_put(map, "awpies", 14);
+    map_put(map, "dspsdies", 14);
+    map_put(map, "apifdes", 14);
+    map_put(map, "awpifdfes", 14);
     int m = map_get(map, "pies");
 
 	printf("MAP %s : %d\n", "pies", m);
-
+    printf("MAP %s : %d\n", "pies",  map_get(map, "apifdes"));
 	return 0;
 }
