@@ -215,7 +215,14 @@ struct command readToken() {
 			}
 		} else {
 			//this is a constantvalue/address
-			token->constantValue = atoi(tokenField);
+			//it may be in int format, or hex format
+			
+			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+				token->constantValue = strtol (tokenField,NULL,0);
+			}
+			else{
+				token->constantValue = atoi(tokenField);
+			}
 		}
 
 	} else if (registersNumber == 0){
@@ -226,8 +233,14 @@ struct command readToken() {
 				token->labelValue[i] = tokenField[i];
 			}
 		} else {
-			//this is a constantvalue/address
-			token->constantValue = atoi(tokenField);
+			//it may be in int format, or hex format
+			
+			if(tokenField[0]=="0"&&tokenField[1]=="x"){
+				token->constantValue = strtol (tokenField,NULL,0);
+			}
+			else{
+				token->constantValue = atoi(tokenField);
+			}
 		}
 	}
 
