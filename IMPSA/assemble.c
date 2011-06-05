@@ -451,7 +451,7 @@ int main(int argc, char *argv[]) {
 					//fist we have to check if the line is empty, if it is, fuck passing.
 					for(j=i; j>0; j--){
 						if(str[j]!=' '||str[j]!="\n"||str[j]!="\t"){
-							empty=1;
+							empty=0;
 						}
 					}
 
