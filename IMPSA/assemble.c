@@ -269,7 +269,7 @@ struct command readToken() {
 	if(lastCharacter==':'){
 		//we have a label;
 		for (i = 0; i < lastCharIndex; i++) {
-			if(tokenField[i]==":") break;
+			if(tokenField[i]==':') break;
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
@@ -277,8 +277,8 @@ struct command readToken() {
 		printf ("2nd %s\n",tokenField);
 	}
 	//next thing HAS TO BE an opcode
-	token.opcode = op_char_to_int(tokenField);
-	token.type = op_to_type(token.opcode);
+	token->opcode = op_char_to_int(tokenField);
+	token->type = op_to_type(token->opcode);
 
 //	token->opcode = 2;
 //	token->type = 2;
@@ -356,7 +356,55 @@ struct command readToken() {
 	return *token;
 }
 
+//-------------PB
 
+struct map_node * assemblerPass1(struct command **commandArray, int size){
+	struct map_node *labelTree = (struct map_node *)malloc(sizeof(struct map_node));
+	int i;
+	for(i=0;i<size;i++){
+		if(commandArray[i]->label!=NULL){
+			map_put(labelTree, commandArray[i]->label, 4*i);
+		}
+	}
+	return labelTree;
+}
+
+int * assemblerPass2(struct command **commandArray, struct map_node *labelTree, struct map_node *op_codes_tree, int size){
+	int *bitArray = (int *)malloc(size*sizeof(int));
+	int i;
+	for(i=0;i<size;i++){
+		if(commandArray[i]->type==TYPE_J){
+			bitArray[i]=(commandArray[i]->opcode << 26);
+			if(commandArray[i]->labelValue!=NULL){
+				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
+			} else {
+				bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
+			}
+		} else if(commandArray[i]->type==TYPE_I){
+			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16));
+			if(commandArray[i]->opcode<=14 && commandArray[i]->opcode>=9){
+				if(commandArray[i]->labelValue!=NULL){
+					bitArray[i] = bitArray[i] | ((map_get(labelTree, commandArray[i]->labelValue))-(i<<2))>>2;
+				}
+			} else if(commandArray[i]->labelValue!=NULL){
+				bitArray[i] = bitArray[i] | (map_get(labelTree, commandArray[i]->labelValue));
+			} else {
+				bitArray[i] = bitArray[i] | commandArray[i]->constantValue;
+			}
+		} else if(commandArray[i]->type==TYPE_R){
+			bitArray[i]=((commandArray[i]->opcode << 26) | (commandArray[i]->r1 << 21) | (commandArray[i]->r2 << 16) | (commandArray[i]->r2 << 11));
+		}
+	}
+	return bitArray;
+}
+
+void binarywriter(char *filename, int *instructions, int ninstructions){
+	FILE *fileptr = fopen(filename, "wb");
+	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
+	fclose(fileptr);
+}
+
+//-------------PB
 
 int main(int argc, char *argv[]) {
 	struct map_node codes_tree;
@@ -438,6 +486,14 @@ int main(int argc, char *argv[]) {
 			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
+                        //-----------PB
+			struct command **commandArrayptr = (struct command **)&commandArray[0];
+			struct map_node * labelTree = assemblerPass1(commandArrayptr, line);
+			int *bitArray = assemblerPass2(commandArrayptr, labelTree, op_codes_tree, line);
+			char filename[100];
+			strcpy(filename,argv[2]);
+			binarywriter(filename, bitArray, line);		
+			//-----------PB
 		}
 	}
 
