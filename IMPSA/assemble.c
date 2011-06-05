@@ -17,13 +17,11 @@
 #define ERR_CANT_OPEN_FILE 2
 
 char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
-
 char *outputPath;
 
 struct map_node {
 	char * key;
 	int value;
-	int colour;
 	struct map_node * left;
 	struct map_node * right;
 };
@@ -31,14 +29,14 @@ struct map_node {
 struct map_node * op_codes_tree = NULL;
 
 int map_put(struct map_node * root, char * key, int value) {
-	struct map_node * node_ptr = malloc(sizeof(struct map_node));
+	struct map_node * node = malloc(sizeof(struct map_node));
 
-	node_ptr -> key = key;
-	node_ptr -> value = value;
-	node_ptr -> left = NULL;
-	node_ptr -> right = NULL;
+	node -> key = key;
+	node -> value = value;
+	node -> left = NULL;
+	node -> right = NULL;
 
-	tree_insert(root, key, node_ptr);
+	tree_insert(root, key, node);
 	return SUCCESS;
 }
 
@@ -284,7 +282,7 @@ struct command readToken() {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command *commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command * commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
 		if(commandArray[i].label != NULL){
@@ -297,12 +295,12 @@ void assemblerPass1(struct map_node * labelTree, struct command *commandArray, i
 	}
 }
 
-int * assemblerPass2(struct map_node *labelTree, struct command *commandArray, int size){
-	int *bitArray = (int *)malloc(size*sizeof(int));
-	int i;
-	for(i = 0; i < size; i++){
-	    replace_label(labelTree, &commandArray[i]);
-	    bitArray[i] = binary_converter(&commandArray[i], i);
+int * assemblerPass2(struct map_node * labelTree, struct command * commandArray, int * size){
+	int * bitArray = (int *)malloc((*size) * sizeof(int));
+	int i, j;
+	for(i = 0, j =0; i < (*size); i++, j++){
+	    replace_label(labelTree, &commandArray[j]);
+	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray);
     }
 	return bitArray;
 }
@@ -330,7 +328,7 @@ int signed_reduction(int r){
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int binary_converter(struct command * c, int i){
+int binary_converter(struct command * c, int * i, int * size, int * ba, int * nba){
     int instr = 0;
     
     if(c -> type != TYPE_S) instr |= (c -> opcode << 26);
@@ -345,13 +343,27 @@ int binary_converter(struct command * c, int i){
         instr |= (c -> r2 << 16);
         
         if(c -> opcode <= 14 && c -> opcode >= 9){
-            instr |= signed_reduction((c -> constantValue - (i<<2)) >> 2);
+            instr |= signed_reduction((c -> constantValue - ((*i)<<2)) >> 2);
         } else {
             instr |= signed_reduction(c -> constantValue);
+        }
+    } else if(c -> opcode == 19){
+        /*
+         * Increase size of an output array and reallocate memory.
+        */
+        if(c -> constantValue > 1){
+            (*size) += (c -> constantValue - 1);
+            (*i) += (c -> constantValue - 1);
+            realloc(ba, (*size) * sizeof(int));
+            int i;
+            for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
+                ba[i] = 0;
+            }
         }
     } else {
         instr |= signed_reduction(c -> constantValue);
     }
+    
     return instr;
 }
 
@@ -458,20 +470,23 @@ int main(int argc, char *argv[]) {
 				if (x == EOL) {
 					//fist we have to check if the line is empty, if it is, fuck passing.
 					for(j = i; j > 0; j--){
-						if(str[j]!=' ' || str[j] != "\n" || str[j] != "\t"){
-							nonempty=1;
+						if(str[j] != ' ' || str[j] != '\n' || str[j] != '\t'){
+							nonempty = 1;
 						}
 					}
 
 					//pass the token to the command Array.
-					if(nonempty) commandArray[line] = readToken();
-
+					if(nonempty){ 
+					    commandArray[line] = readToken();
+                        line++;
+                    } else {
+                        number_of_commands--; //line of code is empty
+                    }
 					//empty the buffer
 					memset(str, '\0' ,sizeof(str));
 					
 					nonempty=0;
 					i=0;
-					line++;
 				} else {
 					str[i] = (char) x;
 					i++;
@@ -484,8 +499,13 @@ int main(int argc, char *argv[]) {
                         //-----------PB
 
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
+    		
+    		labelTree -> key = NULL;
+	        labelTree -> left = NULL;
+	        labelTree -> right = NULL;
+    		
 			assemblerPass1(labelTree, commandArray, number_of_commands);
-			int *bitArray = assemblerPass2(labelTree, commandArray, number_of_commands);
+			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
 			binarywriter(outputPath, bitArray, number_of_commands);		
 					
 			//-----------PB
