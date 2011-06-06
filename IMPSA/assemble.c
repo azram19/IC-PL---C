@@ -290,7 +290,6 @@ void Itype(char * str, struct command *token){
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
 		for(i = 0; i < 16; ++i) token->labelValue[i] = tokenField[i];
-		printf("%s\n",token->labelValue);
 	}
 	else {
 		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
@@ -351,7 +350,6 @@ struct command * readToken(char * str) {
 			token->label[i] = tokenField[i];
 			
 		}
-		//printf("%s\n",token->label);
 		//jump straight to next token
 		tokenField = strtok_r(str, delims, &str);
 	}
@@ -471,7 +469,6 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
             (*size) += (c -> constantValue - 1);
             (*i) += (c -> constantValue - 1);
             nba = realloc(ba, (*size) * sizeof(int));
-            printf("%#x\n", nba);
             int i;
             for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
                 ba[i] = 0;
@@ -494,8 +491,6 @@ int replace_label(struct map_node * labels, struct command * c, int * size){
     
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
-	printf("%s\n", c->labelValue);
-	printf("%d\n", addr);
         if(addr < -1 || addr > 4*((*size)-1)){
         	error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
@@ -534,7 +529,6 @@ int main(int argc, char *argv[]) {
     int ii;
 	
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
-	printf("%ld\n", sizeof(int));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
