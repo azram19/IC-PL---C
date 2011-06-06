@@ -571,14 +571,13 @@ int jal(struct IMPSS* state, int body){
  * @instruction-type J
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void call(struct IMPSS* state, int body){
+int call(struct IMPSS* state, int body){
 	int address = body & M_ADDRESS;
 	  
   push(state->PC+4, state->stackptr);
 	state->PC = address;
  
 	return SUCCESS;
-	
 }
 
 /*
@@ -586,7 +585,7 @@ void call(struct IMPSS* state, int body){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void ret(struct IMPSS* state, int body){
+int ret(struct IMPSS* state, int body){
 	state->PC = pop(state->stackptr);	
 	
 	return SUCCESS;
@@ -678,9 +677,9 @@ int signed_extension(int in){
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 struct stack{
-	int stack[MAX_STACK_SIZE];
-	int top = -1;
-}
+	int stackArr[MAX_STACK_SIZE];
+	int top;
+};
 
 /*
  * Returns 1 if stack is empty, 0 otherwise.
@@ -700,7 +699,8 @@ void push(int newItem, struct stack* Stack){
 	if((Stack->top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
 	else{
 		(Stack->top)++;
-		Stack->stack[Stack->top] = newItem;
+		Stack->stackArr[Stack->top] = newItem;
+	}
 }
 
 /*
@@ -709,9 +709,9 @@ void push(int newItem, struct stack* Stack){
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 int pop(struct stack* Stack){
-	if(isEmpty()) error(ERR_EMPTY_STACK);
+	if(isEmpty(Stack)) error(ERR_EMPTY_STACK);
 	else{
-		int topItem = Stack->stack[Stack->top];
+		int topItem = Stack->stackArr[Stack->top];
 		(Stack->top)--;
 		return topItem;
 	}
@@ -724,7 +724,7 @@ int pop(struct stack* Stack){
  */
 int get(int index, struct stack* Stack){
 	if(index<0 || (index+1)>= MAX_STACK_SIZE) error(STACK_INDEX_OUT_OF_BOUNDS);
-	else return Stack->stack[index];
+	else return Stack->stackArr[index];
 }
 
 
