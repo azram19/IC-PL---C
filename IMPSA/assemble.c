@@ -24,7 +24,7 @@
 #define ERR_NOT_ENOUGH_MEMORY 4
 #define ERR_REPEATED_LABEL 5
 #define ERR_CANT_OPEN_FILE 6
-
+#define ERR_WRONG_NUM_OF_ARGS 7
 
 char delims[] = " \t";
 
@@ -196,7 +196,12 @@ int error(int error_code){
                 fprintf(stderr, 
                         "Error: Can not open the file. Program terminated.\n");    
                 break;
-        }          
+        }    
+	case ERR_WRONG_NUM_OF_ARGS: {
+		fprintf(stderr, 
+                        "Error: The number of arguments must be 2\n");    
+                break;
+	}      
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -212,7 +217,7 @@ int error_file(int error_code, char * filename){
 
 
 
-//â¤        L S  .  .  . f  r  o  m         h   e  r   e       â¤
+//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
 
 /*
  * Converts register symbol to integer
@@ -343,6 +348,7 @@ struct command * readToken(char * str) {
 		for (i = 0; i < lastCharIndex; i++) {
 			if(tokenField[i]==':') break;
 			token->label[i] = tokenField[i];
+			
 		}
 		//jump straight to next token
 		tokenField = strtok_r(str, delims, &str);
@@ -351,7 +357,7 @@ struct command * readToken(char * str) {
 
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-  token -> labelValue = NULL;
+  	token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -397,7 +403,7 @@ int * assemblerPass2(struct map_node * labelTree, struct command ** commandArray
 	}
 	int i, j, nba = 0;
 	for(i = 0, j =0; i < (*size); i++, j++){
-	    nba = NULL;
+	    nba = 0;
 	    replace_label(labelTree, commandArray[j], size);
 	    bitArray[i] = binary_converter(commandArray[j], &i, size, bitArray, &nba);
 	    if(nba != 0){
@@ -488,6 +494,7 @@ int replace_label(struct map_node * labels, struct command * c, int * size){
         if(addr < -1 || addr > 4*((*size)-1)){
         	error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
+
         if(addr == ERROR){
             return ERROR;
         } else{
@@ -553,14 +560,15 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, ".skip", 19);
     
 	if (argc != 3) {
-		printf("usage: %s filename", argv[0]);
+		error(ERR_WRONG_NUM_OF_ARGS);
+		return ERROR;
 	} else {
 		FILE *inputFile;
 		inputFile = fopen(argv[1], "r");
 
 		if (inputFile == NULL) {
-		//	perror("error opening %s!", argv[1]);
-			return 1;
+	   		error_file(ERR_CANT_OPEN_FILE, argv[1]);
+			return ERROR;
 		} else {
 			//SUCCESS - FILE OPENED
 			outputPath = argv[2];
@@ -617,7 +625,7 @@ int main(int argc, char *argv[]) {
 			}
             
 			fclose(inputFile);
-			//â¤        L S  .  .  . e   n   d                              â¤
+			//❤        L S  .  .  . e   n   d                              ❤
 
                         //-----------PB
 
@@ -652,3 +660,4 @@ int main(int argc, char *argv[]) {
 	
 	return 0;
 }
+
