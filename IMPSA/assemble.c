@@ -20,9 +20,6 @@
 
 char delims[] = " \t";
 
-
-char *outputPath;
-
 struct map_node {
 	long long int key;
 	int value;
@@ -255,9 +252,12 @@ void Itype(char * str, struct command *token){
 		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
 	}
 	else {
-		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex 
-			token->constantValue = strtol (tokenField, NULL, 0);
-			for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
+			token->constantValue = strtol(tokenField, NULL, 0);
+			token -> labelValue = (char *) malloc(16 * sizeof(char));
+			for(i = 0; i < 16; i++){
+			    token->labelValue[i] = tokenField[i];
+			}
 		}
 		else token->constantValue = atoi(tokenField); // tokenField is an integer
 	}
@@ -275,7 +275,7 @@ void JorStype(char * str, struct command *token){
 	} else {
 		//it may be in int format, or hex format
 			if(tokenField[0] == '0' && tokenField[1] == 'x')
-				token->constantValue = strtol (tokenField,NULL,0);
+				token->constantValue = strtol (tokenField, NULL, 0);
 			else token->constantValue = atoi(tokenField);
 		}
 }
@@ -289,7 +289,7 @@ void JorStype(char * str, struct command *token){
  */
 struct command readToken(char * str) {
 	struct command *token;
-	token = (struct command *)malloc(1 *sizeof(struct command));
+	token = (struct command *)malloc(sizeof(struct command));
 
 	char *rest;
 	int registersNumber;
@@ -316,12 +316,9 @@ struct command readToken(char * str) {
 	}
 	//next thing HAS TO BE an opcode
 
-//	token->opcode = 15;
-//	token->type = 2;
-
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-  token -> labelValue = NULL;
+    token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -483,7 +480,9 @@ int betole(int b){
 }
 
 int main(int argc, char *argv[]) {
-	char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
+	char str[256];
+    char *outputPath;
+
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 
 	op_codes_tree -> key = EMPTY_KEY;
@@ -592,7 +591,7 @@ int main(int argc, char *argv[]) {
 			free(commandArray);
 
 			//Functions to do:
-		    	freeTheTree(labelTree); 
+		    freeTheTree(labelTree); 
 			freeTheTree(op_codes_tree); 
 		}
 	}
