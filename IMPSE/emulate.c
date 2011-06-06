@@ -31,6 +31,7 @@
 #define ERR_CANT_OPEN_FILE 5
 #define ERR_EMPTY_STACK 6
 #define ERR_FULL_STACK 7
+#define STACK_INDEX_OUT_OF_BOUNDS 8
 
 /*
  * Masks, they have to be shifted to the right position.
@@ -191,6 +192,11 @@ int error(int error_code){
 				case ERR_FULL_STACK: {
 								fprintf(stderr,
 												"Error: Stack is full.\n");
+								break;
+				}
+				case STACK_INDEX_OUT_OF_BOUNDS: {
+								fprintf(stderr,
+												"Error: Index out of bounds.\n");
 								break;
 				}
     }
@@ -684,7 +690,15 @@ int peek(){
 	else return stack[top];
 }
 
-
+/*
+ * Returns the item on the stack at given index.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int get(int index){
+	if(index<0 || (index+1)>= MAX_STACK_SIZE) error(STACK_INDEX_OUT_OF_BOUNDS);
+	else return stack[index];
+}
 
 //------------------------- AS end here --------------------------------
 
