@@ -631,10 +631,12 @@ int signed_extension(int in){
 }
 
 //------------------------- AS from here -----------------------------
-//int stackArr[MAX_STACK_SIZE];
-//int topIndex = -1;
 
-
+/*
+ * Struct used to hold items in stack
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 struct stack{
 	int item;
 	struct stack* next;
