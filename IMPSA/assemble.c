@@ -68,7 +68,7 @@ int map_put(struct map_node * root, char * key, int value) {
 
 	struct map_node * node = malloc(sizeof(struct map_node));
 	if(node == NULL){
-		error(ERR_NOT_ENOUGH_MEMORY);
+	    error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
 	}
 
@@ -82,7 +82,7 @@ int map_put(struct map_node * root, char * key, int value) {
 }
 
 int freeTheTree(struct map_node * root){
-	if(root==NULL) {
+	if(root == NULL) {
 		return SUCCESS;
 	}
 	freeTheTree(root->left);	
@@ -100,6 +100,7 @@ int tree_insert(struct map_node * root, long long int key, struct map_node * nod
 	if (root -> key == EMPTY_KEY) {
 		root -> key = key;
 		root -> value = node -> value;
+		free(node);
 	} else if (root -> key > key) {
 		if (root -> right == NULL) {
 			root -> right = node;
@@ -519,6 +520,7 @@ int main(int argc, char *argv[]) {
     char *outputPath;
 
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
+	printf("%ld\n", sizeof(int));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
