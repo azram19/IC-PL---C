@@ -30,6 +30,7 @@
 #define ERR_NOT_ENOUGH_MEMORY 4
 #define ERR_CANT_OPEN_FILE 5
 #define ERR_EMPTY_STACK 6
+#define ERR_FULL_STACK 7
 
 /*
  * Masks, they have to be shifted to the right position.
@@ -187,6 +188,11 @@ int error(int error_code){
 												"Error: Stack is empty.\n");
 								break;
 				}        
+				case ERR_FULL_STACK: {
+								fprintf(stderr,
+												"Error: Stack is full.\n");
+								break;
+				}
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -631,28 +637,28 @@ int signed_extension(int in){
 }
 
 //------------------------- AS from here -----------------------------
+int stack[MAX_STACK_SIZE]; // no idea how big the stack should be??
+int top;
 
 /*
- * Struct used to hold items in stack
+ * Returns 1 if stack is empty, 0 otherwise.
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-struct stack{
-	int item;
-	struct stack* next;
-};
+int isEmpty(){
+	return top<0;
+}
 
 /*
  * Puts newItem on the top of the stack.
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void push(struct stack* top, int newItem){
-	struct stack* temp;
-	temp = malloc(sizeof(struct stack));
-	temp->item = newItem;
-	temp->next = *top;
-	*top = temp;
+void push(int newItem){
+	if((top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
+	else{
+		top++;
+		stack[top] = newItem;
 }
 
 /*
@@ -661,12 +667,11 @@ void push(struct stack* top, int newItem){
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void pop(struct stack* top){
-	struct stack* temp = *top;
-	if(*top != NULL){
-		*top = temp->next;
-		free(temp);
+	if(isEmpty()) error(ERR_EMPTY_STACK);
+	else{
+		stack[top] = NULL;
+		top--;
 	}
-	else error(ERR_EMPTY_STACK);
 }
 
 /*
@@ -674,21 +679,10 @@ void pop(struct stack* top){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-int peek(struct stack* top){
-	if(*top != NULL) return top->item;
-	else error(ERR_EMPTY_STACK);
+int peek(){
+	if(isEmpty()) error(ERR_EMPTY_STACK);
+	else return stack[top];
 }
-
-/*
- * Returns 1 if stack is empty, 0 otherwise.
- * 
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-int isEmpty(struct stack* top){
-	return(*top == NULL);
-}
-
-
 
 
 
