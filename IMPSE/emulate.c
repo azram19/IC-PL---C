@@ -60,6 +60,7 @@ struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
     int PC;
+		struct stack* stackptr;
 };
 
 int get_register(struct IMPSS*, int);
@@ -565,6 +566,34 @@ int jal(struct IMPSS* state, int body){
 }
 
 /*
+ * Calls another function
+ * 
+ * @instruction-type J
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void call(struct IMPSS* state, int body){
+	int address = body & M_ADDRESS;
+	  
+  push(state->PC+4, state->stackptr);
+	state->PC = address;
+ 
+	return SUCCESS;
+	
+}
+
+/*
+ * Returns from a called function
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void ret(struct IMPSS* state, int body){
+	state->PC = pop(state->stackptr);	
+	
+	return SUCCESS;
+}
+
+
+/*
  * OpCodeFunction is a function pointer and points to a function
  * which takes IMPSS* and int as arguments and returns an int
  */
@@ -642,17 +671,24 @@ int signed_extension(int in){
     return r;
 }
 
-//------------------------- AS from here -----------------------------
-int stack[MAX_STACK_SIZE]; // no idea how big the stack should be??
-int top = -1;
+
+/*
+ * Struct holds the stack
+ *
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+struct stack{
+	int stack[MAX_STACK_SIZE];
+	int top = -1;
+}
 
 /*
  * Returns 1 if stack is empty, 0 otherwise.
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-int isEmpty(){
-	return top<0;
+int isEmpty(struct stack * Stack){
+	return (Stack->top)<0;
 }
 
 /*
@@ -660,11 +696,11 @@ int isEmpty(){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void push(int newItem){
-	if((top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
+void push(int newItem, struct stack* Stack){
+	if((Stack->top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
 	else{
-		top++;
-		stack[top] = newItem;
+		(Stack->top)++;
+		Stack->stack[Stack->top] = newItem;
 }
 
 /*
@@ -672,11 +708,11 @@ void push(int newItem){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-int pop(struct stack* top){
+int pop(struct stack* Stack){
 	if(isEmpty()) error(ERR_EMPTY_STACK);
 	else{
-		int topItem = stack[top];
-		top--;
+		int topItem = Stack->stack[Stack->top];
+		(Stack->top)--;
 		return topItem;
 	}
 }
@@ -686,32 +722,11 @@ int pop(struct stack* top){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-int get(int index){
+int get(int index, struct stack* Stack){
 	if(index<0 || (index+1)>= MAX_STACK_SIZE) error(STACK_INDEX_OUT_OF_BOUNDS);
-	else return stack[index];
+	else return Stack->stack[index];
 }
 
-
-/*
- * Calls another function
- * 
- * @instruction-type J
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-void call(struct IMPSS* state, int body){
-	int address = body & M_ADDRESS;
-	  
-  push(); //aaa nie wiem co dalej robić ^^
-	// push address of caller
-  // push return address
-	
-	state -> PC += 4;
- 
-	return SUCCESS;
-	
-}
-
-//------------------------- AS end here --------------------------------
 
 /*
  * Main
