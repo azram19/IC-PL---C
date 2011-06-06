@@ -156,6 +156,49 @@ struct command {
 	char * labelValue;
 };
 
+//--------------- AS from here -----------------------------------------
+
+void Rtype(struct command *token, char *tokenField, char rest){	
+	token->r1 = reg_char_to_int(tokenField);	
+	tokenField = strtok_r(NULL, delims, &rest);
+	token->r2 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(NULL, delims, &rest);
+	token->r3 = reg_char_to_int(tokenField);
+}
+
+void Itype(struct command *token, char *tokenField, char rest){	
+	token->r1 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(NULL, delims, &rest);
+	token->r2 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(NULL, delims, &rest);
+	if (isalpha(tokenField[0])) {
+		//this is a label
+		token -> labelValue = (char *) malloc(16 * sizeof(char));
+		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
+	} else {
+			//this is a constantvalue/address
+			//it may be in int format, or hex format	
+			if(tokenField[0] == '0' && tokenField[1] == 'x')
+				token->constantValue = strtol (tokenField,NULL,0);
+			else token->constantValue = atoi(tokenField);
+		}
+}
+
+void JorStype(struct command *token, char *tokenField, char rest){	
+	if (isalpha(tokenField[0])) {
+	//this is a label
+		token -> labelValue = (char *) malloc(16 * sizeof(char));
+		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
+	} else {
+		//it may be in int format, or hex format
+			if(tokenField[0] == '0' && tokenField[1] == 'x')
+				token->constantValue = strtol (tokenField,NULL,0);
+			else token->constantValue = atoi(tokenField);
+		}
+}
+
+//--------------- AS end here ------------------------------------------
+
 /*
  * Translates code line into struct token, and then returns it
  *
@@ -195,7 +238,7 @@ struct command readToken() {
 
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-    token -> labelValue = NULL;
+  token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -216,7 +259,7 @@ struct command readToken() {
 
 	//and now to checking...
 
-	if (registersNumber == 1)
+	if (registersNumber==1)
 		registersNumber--;
 
 
@@ -224,60 +267,9 @@ struct command readToken() {
 
 //now to checking the registers....
 
-	if (registersNumber == 3) {
-		//scan for 3 registers
-		//		if ((tokenField[0] == "$"))
-		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r2 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r3 = reg_char_to_int(tokenField);
-
-		//thats it, add and GTFO
-	} else if (registersNumber == 2) {
-		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r2 = reg_char_to_int(tokenField);
-		//next thing will be an immediatevalue/labelvalue
-
-		//jump!
-		tokenField = strtok_r(NULL, delims, &rest);
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for (i = 0; i < 16; i++) {
-				token->labelValue[i] = tokenField[i];
-			}
-		} else {
-			//this is a constantvalue/address
-			//it may be in int format, or hex format
-			
-			if(tokenField[0] == '0' && tokenField[1] == 'x'){
-				token->constantValue = strtol (tokenField,NULL,0);
-			}
-			else{
-				token->constantValue = atoi(tokenField);
-			}
-		}
-
-	} else if (registersNumber == 0 || registersNumber == 5){
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for (i = 0; i < 16; i++) {
-				token->labelValue[i] = tokenField[i];
-			}
-		} else {
-			//it may be in int format, or hex format
-			
-			if(tokenField[0] == '0' && tokenField[1] == 'x'){
-				token->constantValue = strtol (tokenField,NULL,0);
-			}
-			else{
-				token->constantValue = atoi(tokenField);
-			}
-		}
-	}
+	if (registersNumber == 3) Rtype(token, tokenField, &rest);
+	else if (registersNumber == 2) Itype(token, tokenField, &rest);
+	else if (registersNumber == 0 || registersNumber == 5) JorStype(token, tokenField, &rest);
 
 	//now we have a complete token.
 	return *token;
