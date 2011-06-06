@@ -275,15 +275,15 @@ void Rtype(char * str, struct command *token){
  */
 void Itype(char * str, struct command *token){	
 	int i;
-	char *tokenField;
+	char *tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
-	token->r1 = reg_char_to_int(tokenField);
+	token -> r1 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
-	token->r2 = reg_char_to_int(tokenField);
+	token -> r2 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
 	if(isalpha(tokenField[0])){	// tokenField is a label
-		token->labelValue = (char *) malloc(16 * sizeof(char));
-		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+		token -> labelValue = (char *) malloc(16 * sizeof(char));
+		for(i = 0; i < 16; ++i) token->labelValue[i] = tokenField[i];
 	}
 	else {
 		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
@@ -323,7 +323,7 @@ void JorStype(char * str, struct command *token){
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
-struct command readToken(char * str) {
+struct command * readToken(char * str) {
 	struct command *token;
 	token = (struct command *)malloc(sizeof(struct command));
 
@@ -368,7 +368,7 @@ struct command readToken(char * str) {
 	else if (token -> type == TYPE_J || token -> type == TYPE_S) JorStype(str, token);
 
 	//now we have a complete token.
-	return *token;
+	return token;
 }
 
 //-------------PB
@@ -409,6 +409,7 @@ void binarywriter(char *filename, int *instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "wb");
 	
 	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
+	
 	fclose(fileptr);
 }
 
@@ -483,7 +484,7 @@ int replace_label(struct map_node * labels, struct command * c, int * size){
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
         if(addr < 0 || addr > 4*((*size)-1)){
-        	error(ERR_ILLEGAL_MEMORY_ACCESS);
+        	//error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
         if(addr == ERROR){
             return ERROR;
@@ -572,6 +573,7 @@ int main(int argc, char *argv[]) {
 
 			int nonempty=0;
 			int number_of_commands = 0;
+			struct command * t = NULL;
 			
 			while ((x = fgetc(inputFile)) != EOF) {
 			    if(x == '\n') number_of_commands++;
@@ -592,7 +594,10 @@ int main(int argc, char *argv[]) {
 
 					//pass the token to the command Array.
 					if(nonempty){ 
-					    commandArray[line] = readToken(str);
+					    t = readToken(str);
+					    commandArray[line] = *t;
+					    free(t -> labelValue);
+					    free(t);
                         line++;
                     } else {
                         number_of_commands--; //line of code is empty
