@@ -644,7 +644,7 @@ int signed_extension(int in){
 
 //------------------------- AS from here -----------------------------
 int stack[MAX_STACK_SIZE]; // no idea how big the stack should be??
-int top;
+int top = -1;
 
 /*
  * Returns 1 if stack is empty, 0 otherwise.
@@ -672,22 +672,13 @@ void push(int newItem){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void pop(struct stack* top){
+int pop(struct stack* top){
 	if(isEmpty()) error(ERR_EMPTY_STACK);
 	else{
-		stack[top] = NULL;
+		int topItem = stack[top];
 		top--;
+		return topItem;
 	}
-}
-
-/*
- * Returns the item on the top of the stack.
- * 
- * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
- */
-int peek(){
-	if(isEmpty()) error(ERR_EMPTY_STACK);
-	else return stack[top];
 }
 
 /*
@@ -698,6 +689,26 @@ int peek(){
 int get(int index){
 	if(index<0 || (index+1)>= MAX_STACK_SIZE) error(STACK_INDEX_OUT_OF_BOUNDS);
 	else return stack[index];
+}
+
+
+/*
+ * Calls another function
+ * 
+ * @instruction-type J
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void call(struct IMPSS* state, int body){
+	int address = body & M_ADDRESS;
+	  
+  push(); //aaa nie wiem co dalej robić ^^
+	// push address of caller
+  // push return address
+	
+	state -> PC += 4;
+ 
+	return SUCCESS;
+	
 }
 
 //------------------------- AS end here --------------------------------
