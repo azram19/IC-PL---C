@@ -26,8 +26,7 @@
 #define ERR_CANT_OPEN_FILE 6
 
 
-char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
-char *outputPath;
+char delims[] = " \t";
 
 struct map_node {
 	long long int key;
@@ -253,23 +252,87 @@ struct command {
 };
 
 /*
+ * Parser for R-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void Rtype(char * str, struct command *token){	
+	char * tokenField;
+	tokenField = strtok_r(str, delims, &str);
+	token->r1 = reg_char_to_int(tokenField); 
+	tokenField = strtok_r(str, delims, &str);
+	token->r2 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(str, delims, &str);
+	token->r3 = reg_char_to_int(tokenField);	
+}
+
+/*
+ * Parser for I-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void Itype(char * str, struct command *token){	
+	int i;
+	char *tokenField;
+	tokenField = strtok_r(str, delims, &str);
+	token->r1 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(str, delims, &str);
+	token->r2 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(str, delims, &str); 
+	if(isalpha(tokenField[0])){	// tokenField is a label
+		token->labelValue = (char *) malloc(16 * sizeof(char));
+		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+	}
+	else {
+		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
+			token->constantValue = strtol(tokenField, NULL, 0);
+			token -> labelValue = (char *) malloc(16 * sizeof(char));
+			for(i = 0; i < 16; i++){
+			    token->labelValue[i] = tokenField[i];
+			}
+		}
+		else token->constantValue = atoi(tokenField); // tokenField is an integer
+	}
+}
+
+/*
+ * Parser for J-type and S-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void JorStype(char * str, struct command *token){	
+	int i;
+	char *tokenField;
+	tokenField = strtok_r(str, delims, &str);
+	if (isalpha(tokenField[0])){ // tokenField is a label
+		token -> labelValue = (char *) malloc(16 * sizeof(char));
+		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
+	} else {
+		//it may be in int format, or hex format
+			if(tokenField[0] == '0' && tokenField[1] == 'x')
+				token->constantValue = strtol (tokenField, NULL, 0);
+			else token->constantValue = atoi(tokenField);
+		}
+}
+
+/*
  * Translates code line into struct token, and then returns it
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
-struct command readToken() {
+struct command readToken(char * str) {
 	struct command *token;
-	token = (struct command *)malloc(1*sizeof(struct command));
+	token = (struct command *)malloc(sizeof(struct command));
 
-	char *rest;
 	int registersNumber;
 	int i;
 
-
-	char delims[] = " \t";
 	char * tokenField;
 
-	tokenField = strtok_r(str, delims, &rest);
+	tokenField = strtok_r(str, delims, &str);
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -282,16 +345,13 @@ struct command readToken() {
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
-		tokenField = strtok_r(NULL, delims, &rest);
+		tokenField = strtok_r(str, delims, &str);
 	}
 	//next thing HAS TO BE an opcode
 
-//	token->opcode = 15;
-//	token->type = 2;
-
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-    token -> labelValue = NULL;
+  token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -306,74 +366,12 @@ struct command readToken() {
 
 	registersNumber = token->type;
 
-
-	//jump to next
-	tokenField = strtok_r(NULL, delims, &rest);
-
-	//and now to checking...
-
-	if (registersNumber == 1)
+	if (registersNumber==1)
 		registersNumber--;
 
-
-
-
-//now to checking the registers....
-
-	if (registersNumber == 3) {
-		//scan for 3 registers
-		//		if ((tokenField[0] == "$"))
-		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r2 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r3 = reg_char_to_int(tokenField);
-
-		//thats it, add and GTFO
-	} else if (registersNumber == 2) {
-		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok_r(NULL, delims, &rest);
-		token->r2 = reg_char_to_int(tokenField);
-		//next thing will be an immediatevalue/labelvalue
-
-		//jump!
-		tokenField = strtok_r(NULL, delims, &rest);
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for (i = 0; i < 16; i++) {
-				token->labelValue[i] = tokenField[i];
-			}
-		} else {
-			//this is a constantvalue/address
-			//it may be in int format, or hex format
-			
-			if(tokenField[0] == '0' && tokenField[1] == 'x'){
-				token->constantValue = strtol (tokenField,NULL,0);
-			}
-			else{
-				token->constantValue = atoi(tokenField);
-			}
-		}
-
-	} else if (registersNumber == 0 || registersNumber == 5){
-		if (isalpha(tokenField[0])) {
-			//this is a label
-			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for (i = 0; i < 16; i++) {
-				token->labelValue[i] = tokenField[i];
-			}
-		} else {
-			//it may be in int format, or hex format
-			
-			if(tokenField[0] == '0' && tokenField[1] == 'x'){
-				token->constantValue = strtol (tokenField,NULL,0);
-			}
-			else{
-				token->constantValue = atoi(tokenField);
-			}
-		}
-	}
+	if (registersNumber == 3) Rtype(str, token);
+	else if (registersNumber == 2) Itype(str, token);
+	else if (registersNumber == 0 || registersNumber == 5) JorStype(str, token);
 
 	//now we have a complete token.
 	return *token;
@@ -522,6 +520,9 @@ int betole(int b){
 }
 
 int main(int argc, char *argv[]) {
+	char str[256];
+    char *outputPath;
+
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
@@ -597,7 +598,7 @@ int main(int argc, char *argv[]) {
 
 					//pass the token to the command Array.
 					if(nonempty){ 
-					    commandArray[line] = readToken();
+					    commandArray[line] = readToken(str);
                         line++;
                     } else {
                         number_of_commands--; //line of code is empty
@@ -638,7 +639,7 @@ int main(int argc, char *argv[]) {
 			free(commandArray);
 
 			//Functions to do:
-		    	freeTheTree(labelTree); 
+		    freeTheTree(labelTree); 
 			freeTheTree(op_codes_tree); 
 		}
 	}
