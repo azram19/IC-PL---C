@@ -9,6 +9,8 @@
 #define TYPE_R 3
 #define TYPE_S 5
 
+#define EMPTY_KEY -1
+
 #define SUCCESS 1
 #define HALT 0
 #define ERROR -1
@@ -22,7 +24,7 @@ char delims[] = " \t";
 char *outputPath;
 
 struct map_node {
-	char * key;
+	long long int key;
 	int value;
 	struct map_node * left;
 	struct map_node * right;
@@ -30,23 +32,66 @@ struct map_node {
 
 struct map_node * op_codes_tree = NULL;
 
+/*
+ * Generates hashcode for the given string.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Hashcode
+ */
+long long int get_hashcode(char * s){
+    long long int h = 0;
+    int i = 0;
+    int p = 101;
+    long long int pow = p;
+    
+    while(s[i] != '\0'){
+        h += s[i] * pow;
+        pow *= p;
+        i++;
+    }
+    
+    return (h == -1) ? 1 : h;
+}
+
+/*
+ * Inserts element into the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int map_put(struct map_node * root, char * key, int value) {
+    if(key[0] == '\0') return SUCCESS;
+
 	struct map_node * node = malloc(sizeof(struct map_node));
 
-	node -> key = key;
+	node -> key = get_hashcode(key);
 	node -> value = value;
 	node -> left = NULL;
 	node -> right = NULL;
 
-	tree_insert(root, key, node);
+	tree_insert(root, node -> key, node);
 	return SUCCESS;
 }
 
-int tree_insert(struct map_node * root, char * key, struct map_node * node) {
-	if (root -> key == NULL) {
-		root -> key = node -> key;
+int freeTheTree(struct map_node * root){
+	if(root==NULL) {
+		return SUCCESS;
+	}
+	freeTheTree(root->left);	
+	freeTheTree(root->right);
+	free(root);
+	return SUCCESS;
+}
+
+/*
+ * Inserts element into the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int tree_insert(struct map_node * root, long long int key, struct map_node * node) {
+	if (root -> key == EMPTY_KEY) {
+		root -> key = key;
 		root -> value = node -> value;
-	} else if (strcmp(root -> key, key) > 0) {
+	} else if (root -> key > key) {
 		if (root -> right == NULL) {
 			root -> right = node;
 		} else {
@@ -63,26 +108,45 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 	return SUCCESS;
 }
 
+/*
+ * Finds element in the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Either value assigned to the key, or an EMPTY_KEY.
+ */
 int map_get(struct map_node * root, char * key) {
-	if (root == NULL || root -> key == NULL) {
+	if (root == NULL || root -> key == EMPTY_KEY) {
 		return ERROR;
 	}
 
-    int compare = strcmp(root -> key, key);
-
-	if (compare == 0) {
+    long long int hash = get_hashcode(key);
+    
+    if (root -> key == hash) {
 		return root -> value;
-	} else if (compare > 0) {
+	} else if (root -> key > hash) {
 		return map_get(root -> right, key);
 	} else {
 		return map_get(root -> left, key);
 	}
 }
 
+
+/*
+ * Returns OpCode assigned to the given instruction.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return OpCode
+ */
 int op_char_to_int(char * op_code) {
 	return map_get(op_codes_tree, op_code);
 }
 
+/*
+ * Returns type of the instruction.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Type
+ */
 int op_to_type(int op_code) {
 	int op_type[20] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
 			TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I,
@@ -297,21 +361,24 @@ void assemblerPass1(struct map_node * labelTree, struct command * commandArray, 
 	int i;
 	for(i = 0; i < size; i++){
 		if(commandArray[i].label != NULL){
-			/*if(map_get(labelTree, commandArray[i].label)!=ERROR){
+			if(map_get(labelTree, commandArray[i].label) != ERROR){
 				error(ERR_REPEATED_LABEL);
-			}else{ */
+			}else{
 				map_put(labelTree, commandArray[i].label, 4*i);
-			//}
+			}
 		}
 	}
 }
 
 int * assemblerPass2(struct map_node * labelTree, struct command * commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
-	int i, j;
+	int i, j, nba = bitArray;
 	for(i = 0, j =0; i < (*size); i++, j++){
 	    replace_label(labelTree, &commandArray[j]);
-	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray);
+	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray, &nba);
+	    if(nba != bitArray){
+	        bitArray = nba;
+	    }
     }
 	return bitArray;
 }
@@ -335,7 +402,7 @@ int signed_reduction(int r){
 }
 
 /*
- * Converts srtuct into binary represantation; instruction.
+ * Converts struct into its binary represantation; instruction.
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
@@ -348,7 +415,6 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
         instr |= (c -> r3 << 11);
-        //printf("%d %d\n", i, c -> r3);
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
@@ -365,7 +431,7 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
         if(c -> constantValue > 1){
             (*size) += (c -> constantValue - 1);
             (*i) += (c -> constantValue - 1);
-            realloc(ba, (*size) * sizeof(int));
+            nba = realloc(ba, (*size) * sizeof(int));
             int i;
             for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
                 ba[i] = 0;
@@ -420,7 +486,7 @@ int main(int argc, char *argv[]) {
 	char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 
-	op_codes_tree -> key = NULL;
+	op_codes_tree -> key = EMPTY_KEY;
 	op_codes_tree -> left = NULL;
 	op_codes_tree -> right = NULL;
 
@@ -512,7 +578,7 @@ int main(int argc, char *argv[]) {
 
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
     		
-    		labelTree -> key = NULL;
+    		labelTree -> key = EMPTY_KEY;
 	        labelTree -> left = NULL;
 	        labelTree -> right = NULL;
     		
@@ -520,10 +586,14 @@ int main(int argc, char *argv[]) {
 			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
 			binarywriter(outputPath, bitArray, number_of_commands);		
 					
+			
 			//-----------PB
-		    free(labelTree);
 			free(bitArray);
-			free(op_codes_tree);
+			free(commandArray);
+
+			//Functions to do:
+		    	freeTheTree(labelTree); 
+			freeTheTree(op_codes_tree); 
 		}
 	}
 	
