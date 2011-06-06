@@ -29,6 +29,7 @@
 #define ERR_WRONG_REGISTER 3
 #define ERR_NOT_ENOUGH_MEMORY 4
 #define ERR_CANT_OPEN_FILE 5
+#define ERR_EMPTY_STACK 6
 
 /*
  * Masks, they have to be shifted to the right position.
@@ -37,6 +38,8 @@
 #define M_REGISTER 0x0000001F
 #define M_ADDRESS 0x03FFFFFF
 #define M_IMM 0x0000FFFF
+
+#define MAX_STACK_SIZE 200
 
 /*
  * Struct used to hold current state of IMP machine.
@@ -178,7 +181,12 @@ int error(int error_code){
                 fprintf(stderr, 
                         "Error: Can not open the file. Program terminated.\n");    
                 break;
-        }         
+        }
+				case ERR_EMPTY_STACK: {
+								fprintf(stderr,
+												"Error: Stack is empty.\n");
+								break;
+				}        
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -622,6 +630,50 @@ int signed_extension(int in){
     return r;
 }
 
+//------------------------- AS from here -----------------------------
+//int stackArr[MAX_STACK_SIZE];
+//int topIndex = -1;
+
+
+struct stack{
+	int item;
+	struct stack* next;
+};
+
+/*
+ * Puts newItem on the top of the stack.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void push(struct stack* top, int newItem){
+	struct stack* temp;
+	temp = malloc(sizeof(struct stack));
+	temp->item = newItem;
+	temp->next = *top;
+	*top = temp;
+}
+
+/*
+ * Removes top element from the stack.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void pop(struct stack* top){
+	struct stack* temp = *top;
+	if(*top != NULL){
+		*top = temp->next;
+		free(temp);
+	}
+	else error(ERR_EMPTY_STACK);
+}
+
+
+
+
+
+
+//------------------------- AS end here --------------------------------
+
 /*
  * Main
  *
@@ -686,15 +738,5 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
 
 
