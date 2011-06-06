@@ -219,8 +219,12 @@ struct command {
 	char * labelValue;
 };
 
-//--------------- AS from here -----------------------------------------
-
+/*
+ * Parser for R-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 void Rtype(char * str, struct command *token){	
 	char * tokenField;
 	char * rest;
@@ -235,6 +239,12 @@ void Rtype(char * str, struct command *token){
 	token->r3 = reg_char_to_int(tokenField);	
 }
 
+/*
+ * Parser for I-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 void Itype(char * str, struct command *token){	
 	int i;
 	char *tokenField;
@@ -263,6 +273,12 @@ void Itype(char * str, struct command *token){
 	}
 }
 
+/*
+ * Parser for J-type and S-type instructions
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
 void JorStype(char * str, struct command *token){	
 	int i;
 	char *tokenField;
@@ -279,8 +295,6 @@ void JorStype(char * str, struct command *token){
 			else token->constantValue = atoi(tokenField);
 		}
 }
-
-//--------------- AS end here ------------------------------------------
 
 /*
  * Translates code line into struct token, and then returns it
