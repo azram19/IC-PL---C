@@ -184,6 +184,7 @@ struct command readToken() {
 	struct command *token;
 	token = (struct command *)malloc(1*sizeof(struct command));
 
+	char *rest;
 	int registersNumber;
 	int i;
 
@@ -191,7 +192,7 @@ struct command readToken() {
 	char delims[] = " \t";
 	char * tokenField;
 
-	tokenField = strtok(str, delims);
+	tokenField = strtok_r(str, delims, &rest);
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -204,7 +205,7 @@ struct command readToken() {
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok_r(NULL, delims, &rest);
 	}
 	//next thing HAS TO BE an opcode
 
@@ -230,31 +231,36 @@ struct command readToken() {
 
 
 	//jump to next
-	tokenField = strtok(NULL, delims);
+	tokenField = strtok_r(NULL, delims, &rest);
 
 	//and now to checking...
 
 	if (registersNumber == 1)
 		registersNumber--;
 
+
+
+
+//now to checking the registers....
+
 	if (registersNumber == 3) {
 		//scan for 3 registers
 		//		if ((tokenField[0] == "$"))
 		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok_r(NULL, delims, &rest);
 		token->r2 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok_r(NULL, delims, &rest);
 		token->r3 = reg_char_to_int(tokenField);
 
 		//thats it, add and GTFO
 	} else if (registersNumber == 2) {
 		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok_r(NULL, delims, &rest);
 		token->r2 = reg_char_to_int(tokenField);
 		//next thing will be an immediatevalue/labelvalue
 
 		//jump!
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok_r(NULL, delims, &rest);
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
@@ -539,3 +545,80 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/*
+struct command readToken() {
+	struct command *token;
+	token = (struct command *)malloc(1*sizeof(struct command));
+
+	return *token;
+}
+
+void reader(char *filename, char **instructions, int number_of_commands, int msize){
+	FILE *fileptr = fopen(filename, "r");
+	instructions = createcommands(number_of_commands);
+	int i;
+	assert(commands!=NULL);
+	for(i=0; i<number_of_commands; i++){
+		commands[i] = getcommand(msize, fileptr);
+	}
+	fclose(fileptr);
+	return commands;
+}
+
+int arraysize(char *filename){
+	int number_of_commands = 0;
+	FILE *fileptr = fopen(filename, "r");
+	if (fileptr == NULL) {
+	    error_file(ERR_CANT_OPEN_FILE, filename);
+		return ERROR;
+	}
+	while ((x = fgetc(fileptr)) != EOF) {
+			    if(x == '\n') number_of_commands++;
+			}
+	rewind(fileptr);
+	fclose(fileptr);
+	return number_of_commands;
+}
+
+char * createcommand(int msize){
+	char *cptr;
+	cptr = (char *)malloc(msize*sizeof(char));
+	if(cptr==NULL){
+		perror("malloc");
+		return(NULL);
+	}
+	return cptr;
+}
+
+char ** createcommands(int number_of_commands){
+	int i;
+	char ** cptr = (char **)malloc(number_of_commands*sizeof(char *));
+	if(cptr==NULL){
+		perror("malloc");
+		return(NULL);
+	}
+	for(i = 0; i<number_of_commands; i++){
+		cptr[i] = NULL;
+	}
+	return cptr;
+}
+
+char * getcommand(int msize, FILE *fileptr){
+	char * command = createcommand(msize);
+	assert(command!=NULL);
+	fgets (command, msize, fileptr);
+	return command;
+}
+
+int main(int argc, char *argv[]){
+	char filename[100];
+	strcpy(filename,argv[1]);
+	int msize = 256;
+	int number_of_commands = arraysize(filename);
+	struct command *commandArray = (struct command *) malloc(number_of_commands * sizeof(struct command));
+	char **instructions = NULL;
+	instructions = reader(filename, instructions, number_of_commands, msize);
+	return 0;
+}
+
+*/
