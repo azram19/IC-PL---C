@@ -483,8 +483,8 @@ int replace_label(struct map_node * labels, struct command * c, int * size){
     
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
-        if(addr < 0 || addr > 4*((*size)-1)){
-        	//error(ERR_ILLEGAL_MEMORY_ACCESS);
+        if(addr < -1 || addr > 4*((*size)-1)){
+        	error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
         if(addr == ERROR){
             return ERROR;
