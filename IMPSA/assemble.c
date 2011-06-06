@@ -68,7 +68,7 @@ int map_put(struct map_node * root, char * key, int value) {
 
 	struct map_node * node = malloc(sizeof(struct map_node));
 	if(node == NULL){
-		error(ERR_NOT_ENOUGH_MEMORY);
+	    error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
 	}
 
@@ -82,7 +82,7 @@ int map_put(struct map_node * root, char * key, int value) {
 }
 
 int freeTheTree(struct map_node * root){
-	if(root==NULL) {
+	if(root == NULL) {
 		return SUCCESS;
 	}
 	freeTheTree(root->left);	
@@ -100,6 +100,7 @@ int tree_insert(struct map_node * root, long long int key, struct map_node * nod
 	if (root -> key == EMPTY_KEY) {
 		root -> key = key;
 		root -> value = node -> value;
+		free(node);
 	} else if (root -> key > key) {
 		if (root -> right == NULL) {
 			root -> right = node;
@@ -280,7 +281,7 @@ void Rtype(char * str, struct command *token){
  */
 void Itype(char * str, struct command *token){	
 	int i;
-	char *tokenField = NULL;
+	char *tokenField;
 	tokenField = strtok_r(str, delims, &str);
 	token -> r1 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
@@ -336,10 +337,10 @@ struct command * readToken(char * str) {
 	int registersNumber;
 	int i;
 	char * tokenField;
-	//memset(tokenField.label, '\0' ,16);
+
 	tokenField = strtok_r(str, delims, &str);
 	//first thing is either label, or opcode
-	
+
 	int lastCharIndex=(strlen(tokenField))-1;
 	char lastCharacter=tokenField[lastCharIndex];
 	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
@@ -384,30 +385,30 @@ struct command * readToken(char * str) {
 /*
  * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
  */
-void assemblerPass1(struct map_node * labelTree, struct command * commandArray, int size){ 
+void assemblerPass1(struct map_node * labelTree, struct command ** commandArray, int size){ 
 	int i;
 	for(i = 0; i < size; i++){
-		if(commandArray[i].label != NULL){
-			if(map_get(labelTree, commandArray[i].label) != ERROR){
+		if(commandArray[i] -> label != NULL){
+			if(map_get(labelTree, commandArray[i] -> label) != ERROR){
 				error(ERR_REPEATED_LABEL);
 			}else{
-				map_put(labelTree, commandArray[i].label, 4*i);
-				printf("%s\n",commandArray[i].label);
+				map_put(labelTree, commandArray[i] -> label, 4*i);
 			}
 		}
 	}
 }
 
-int * assemblerPass2(struct map_node * labelTree, struct command * commandArray, int * size){
+int * assemblerPass2(struct map_node * labelTree, struct command ** commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
 	if(bitArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
-	int i, j, nba = bitArray;
+	int i, j, nba = NULL;
 	for(i = 0, j =0; i < (*size); i++, j++){
-	    replace_label(labelTree, &commandArray[j], size);
-	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray, &nba);
-	    if(nba != bitArray){
+	    replace_label(labelTree, commandArray[j], size);
+	    bitArray[i] = binary_converter(commandArray[j], &i, size, bitArray, &nba);
+	    if(nba != NULL){
+	        free(bitArray);
 	        bitArray = nba;
 	    }
     }
@@ -470,6 +471,7 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
             (*size) += (c -> constantValue - 1);
             (*i) += (c -> constantValue - 1);
             nba = realloc(ba, (*size) * sizeof(int));
+            printf("%#x\n", nba);
             int i;
             for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
                 ba[i] = 0;
@@ -488,7 +490,8 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
 int replace_label(struct map_node * labels, struct command * c, int * size){
-    int addr = 0;  
+    int addr = 0;
+    
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
 	printf("%s\n", c->labelValue);
@@ -527,8 +530,11 @@ int betole(int b){
 
 int main(int argc, char *argv[]) {
 	char str[256];
-    	char *outputPath;
+    char *outputPath;
+    int ii;
+	
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
+	printf("%ld\n", sizeof(int));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
@@ -565,6 +571,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		FILE *inputFile;
 		inputFile = fopen(argv[1], "r");
+
 		if (inputFile == NULL) {
 	   		error_file(ERR_CANT_OPEN_FILE, argv[1]);
 			return ERROR;
@@ -574,10 +581,13 @@ int main(int argc, char *argv[]) {
 
 			int x;
 			const char EOL = '\n';
+
 			int i=0;
 			int j;
 			int line=0;
-			struct command * commandArray = NULL;
+
+			struct command ** commandArray = NULL;
+
 			int nonempty=0;
 			int number_of_commands = 0;
 			struct command * t = NULL;
@@ -586,7 +596,9 @@ int main(int argc, char *argv[]) {
 			    if(x == '\n') number_of_commands++;
 			}
 			rewind(inputFile);		
-			commandArray = (struct command *) malloc(number_of_commands * sizeof(struct command));
+			commandArray = (struct command **) malloc(number_of_commands * sizeof(struct command *));
+			
+			ii = number_of_commands;
 			
 			while ((x = fgetc(inputFile)) != EOF) {
 				//read one line
@@ -602,13 +614,11 @@ int main(int argc, char *argv[]) {
 					//pass the token to the command Array.
 					if(nonempty){ 
 					    t = readToken(str);
-					    commandArray[line] = *t;
-					    free(t -> labelValue);
-					    free(t);
-                		            line++;
-                			} else {
-                       				 number_of_commands--; //line of code is empty
-                   			}
+					    commandArray[line] = t;
+                        line++;
+                    } else {
+                        number_of_commands--; //line of code is empty
+                    }
 					//empty the buffer
 					memset(str, '\0' ,sizeof(str));
 					
@@ -623,8 +633,8 @@ int main(int argc, char *argv[]) {
 			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
-                //-----------PB
-		
+                        //-----------PB
+
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 		if(labelTree == NULL){
 			error(ERR_NOT_ENOUGH_MEMORY);
@@ -635,16 +645,22 @@ int main(int argc, char *argv[]) {
 	        labelTree -> left = NULL;
 	        labelTree -> right = NULL;
     		
-		assemblerPass1(labelTree, commandArray, number_of_commands);
-		int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
-		binarywriter(outputPath, bitArray, number_of_commands);		
-				
+			assemblerPass1(labelTree, commandArray, number_of_commands);
+			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
+			binarywriter(outputPath, bitArray, number_of_commands);		
+					
 			
-		//-----------PB
-		free(bitArray);
-		free(commandArray);
-		freeTheTree(labelTree); 
-		freeTheTree(op_codes_tree); 
+			//-----------PB
+			free(bitArray);
+
+			//Functions to do:
+		    freeTheTree(labelTree); 
+			freeTheTree(op_codes_tree);
+			for(i = 0; i < ii; i++){
+			    if(commandArray[i] != NULL)free(commandArray[i] -> labelValue);
+			    free(commandArray[i]);
+			}
+			free(commandArray);
 		}
 	}
 	
