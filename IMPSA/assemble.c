@@ -9,6 +9,8 @@
 #define TYPE_R 3
 #define TYPE_S 5
 
+#define EMPTY_KEY -1
+
 #define SUCCESS 1
 #define HALT 0
 #define ERROR -1
@@ -29,6 +31,8 @@ struct map_node {
 struct map_node * op_codes_tree = NULL;
 
 int map_put(struct map_node * root, char * key, int value) {
+    if(key[0] == '\0') return SUCCESS;
+
 	struct map_node * node = malloc(sizeof(struct map_node));
 
 	node -> key = key;
@@ -75,6 +79,21 @@ int map_get(struct map_node * root, char * key) {
 	} else {
 		return map_get(root -> left, key);
 	}
+}
+
+long long int get_hashcode(char * s){
+    long long int h = 0;
+    int i = 0;
+    int p = 101;
+    long long int pow = p;
+    
+    while(s[i] != '\0'){
+        h += s[i] * pow;
+        pow *= p;
+        i++;
+    }
+    
+    return (h == -1) ? 1 : h;
 }
 
 int op_char_to_int(char * op_code) {
@@ -286,21 +305,24 @@ void assemblerPass1(struct map_node * labelTree, struct command * commandArray, 
 	int i;
 	for(i = 0; i < size; i++){
 		if(commandArray[i].label != NULL){
-			/*if(map_get(labelTree, commandArray[i].label)!=ERROR){
+			if(map_get(labelTree, commandArray[i].label) != ERROR){
 				error(ERR_REPEATED_LABEL);
-			}else{ */
+			}else{
 				map_put(labelTree, commandArray[i].label, 4*i);
-			//}
+			}
 		}
 	}
 }
 
 int * assemblerPass2(struct map_node * labelTree, struct command * commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
-	int i, j;
+	int i, j, nba = bitArray;
 	for(i = 0, j =0; i < (*size); i++, j++){
 	    replace_label(labelTree, &commandArray[j]);
-	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray);
+	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray, &nba);
+	    if(nba != bitArray){
+	        bitArray = nba;
+	    }
     }
 	return bitArray;
 }
@@ -337,7 +359,6 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
         instr |= (c -> r3 << 11);
-        //printf("%d %d\n", i, c -> r3);
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
@@ -354,7 +375,7 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
         if(c -> constantValue > 1){
             (*size) += (c -> constantValue - 1);
             (*i) += (c -> constantValue - 1);
-            realloc(ba, (*size) * sizeof(int));
+            nba = realloc(ba, (*size) * sizeof(int));
             int i;
             for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
                 ba[i] = 0;
