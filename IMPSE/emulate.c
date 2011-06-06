@@ -669,6 +669,24 @@ void pop(struct stack* top){
 	else error(ERR_EMPTY_STACK);
 }
 
+/*
+ * Returns the item on the top of the stack.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int peek(struct stack* top){
+	if(*top != NULL) return top->item;
+	else error(ERR_EMPTY_STACK);
+}
+
+/*
+ * Returns 1 if stack is empty, 0 otherwise.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int isEmpty(struct stack* top){
+	return(*top == NULL);
+}
 
 
 
