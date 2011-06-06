@@ -165,6 +165,7 @@ struct command readToken() {
 	struct command *token;
 	token = (struct command *)malloc(1*sizeof(struct command));
 
+	char *rest;
 	int registersNumber;
 	int i;
 
@@ -172,7 +173,7 @@ struct command readToken() {
 	char delims[] = " \t";
 	char * tokenField;
 
-	tokenField = strtok(str, delims);
+	tokenField = strtok_r(str, delims, &rest);
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -185,7 +186,7 @@ struct command readToken() {
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok(NULL, delims, &rest);
 	}
 	//next thing HAS TO BE an opcode
 
@@ -211,31 +212,36 @@ struct command readToken() {
 
 
 	//jump to next
-	tokenField = strtok(NULL, delims);
+	tokenField = strtok(NULL, delims, &rest);
 
 	//and now to checking...
 
 	if (registersNumber == 1)
 		registersNumber--;
 
+
+
+
+//now to checking the registers....
+
 	if (registersNumber == 3) {
 		//scan for 3 registers
 		//		if ((tokenField[0] == "$"))
 		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok(NULL, delims, &rest);
 		token->r2 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok(NULL, delims, &rest);
 		token->r3 = reg_char_to_int(tokenField);
 
 		//thats it, add and GTFO
 	} else if (registersNumber == 2) {
 		token->r1 = reg_char_to_int(tokenField);
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok(NULL, delims, &rest);
 		token->r2 = reg_char_to_int(tokenField);
 		//next thing will be an immediatevalue/labelvalue
 
 		//jump!
-		tokenField = strtok(NULL, delims);
+		tokenField = strtok(NULL, delims, &rest);
 		if (isalpha(tokenField[0])) {
 			//this is a label
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
