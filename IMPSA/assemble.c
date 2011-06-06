@@ -248,15 +248,11 @@ void Rtype(char * str, struct command *token){
 void Itype(char * str, struct command *token){	
 	int i;
 	char *tokenField;
-	char *rest;
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r1 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r2 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(str, delims, &rest); 
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token->labelValue = (char *) malloc(16 * sizeof(char));
 		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
@@ -345,19 +341,9 @@ struct command readToken(char * str) {
 	 *
 	 */
 
-	registersNumber = token->type;
-
-	//and now to checking...
-
-	if (registersNumber==1)
-		registersNumber--;
-
-
-//now to checking the registers....
-
-	if (registersNumber == 3) Rtype(str, token);
-	else if (registersNumber == 2) Itype(str, token);
-	else if (registersNumber == 0 || registersNumber == 5) JorStype(str, token);
+	if (token -> type == TYPE_R) Rtype(str, token);
+	else if (token -> type == TYPE_I) Itype(str, token);
+	else if (token -> type == TYPE_J || token -> type == TYPE_S) JorStype(str, token);
 
 	//now we have a complete token.
 	return *token;
