@@ -70,6 +70,16 @@ int map_put(struct map_node * root, char * key, int value) {
 	return SUCCESS;
 }
 
+int freeTheTree(struct map_node * root){
+	if(root==NULL) {
+		return SUCCESS;
+	}
+	freeTheTree(root->left);	
+	freeTheTree(root->right);
+	free(root);
+	return SUCCESS;
+}
+
 /*
  * Inserts element into the map.
  * 
@@ -570,10 +580,14 @@ int main(int argc, char *argv[]) {
 			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
 			binarywriter(outputPath, bitArray, number_of_commands);		
 					
+			
 			//-----------PB
-		    free(labelTree);
 			free(bitArray);
-			free(op_codes_tree);
+			free(commandArray);
+
+			//Functions to do:
+		    	freeTheTree(labelTree); 
+			freeTheTree(op_codes_tree); 
 		}
 	}
 	
