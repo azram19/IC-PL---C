@@ -395,12 +395,12 @@ int * assemblerPass2(struct map_node * labelTree, struct command ** commandArray
 	if(bitArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
-	int i, j, nba = NULL;
+	int i, j, nba = 0;
 	for(i = 0, j =0; i < (*size); i++, j++){
+	    nba = NULL;
 	    replace_label(labelTree, commandArray[j], size);
 	    bitArray[i] = binary_converter(commandArray[j], &i, size, bitArray, &nba);
-	    if(nba != NULL){
-	        free(bitArray);
+	    if(nba != 0){
 	        bitArray = nba;
 	    }
     }
@@ -462,8 +462,7 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
         if(c -> constantValue > 1){
             (*size) += (c -> constantValue - 1);
             (*i) += (c -> constantValue - 1);
-            nba = realloc(ba, (*size) * sizeof(int));
-            printf("%#x\n", nba);
+            *nba = realloc(ba, (*size) * sizeof(int));
             int i;
             for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
                 ba[i] = 0;
@@ -523,7 +522,6 @@ int main(int argc, char *argv[]) {
     int ii;
 	
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
-	printf("%ld\n", sizeof(int));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
