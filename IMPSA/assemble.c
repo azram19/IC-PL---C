@@ -323,7 +323,7 @@ void JorStype(char * str, struct command *token){
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
-struct command readToken(char * str) {
+struct command *readToken(char * str) {
 	struct command *token;
 	token = (struct command *)malloc(sizeof(struct command));
 
@@ -374,7 +374,7 @@ struct command readToken(char * str) {
 	else if (registersNumber == 0 || registersNumber == 5) JorStype(str, token);
 
 	//now we have a complete token.
-	return *token;
+	return token;
 }
 
 //-------------PB
@@ -599,6 +599,7 @@ int main(int argc, char *argv[]) {
 					//pass the token to the command Array.
 					if(nonempty){ 
 					    commandArray[line] = readToken(str);
+
                         line++;
                     } else {
                         number_of_commands--; //line of code is empty
