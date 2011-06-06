@@ -24,7 +24,7 @@
 #define ERR_NOT_ENOUGH_MEMORY 4
 #define ERR_REPEATED_LABEL 5
 #define ERR_CANT_OPEN_FILE 6
-
+#define ERR_WRONG_NUM_OF_ARGS 7
 
 char delims[] = " \t";
 
@@ -195,7 +195,12 @@ int error(int error_code){
                 fprintf(stderr, 
                         "Error: Can not open the file. Program terminated.\n");    
                 break;
-        }          
+        }    
+	case ERR_WRONG_NUM_OF_ARGS: {
+		fprintf(stderr, 
+                        "Error: The number of arguments must be 2\n");    
+                break;
+	}      
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -284,6 +289,7 @@ void Itype(char * str, struct command *token){
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
 		for(i = 0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+		printf("%s\n",token->labelValue);
 	}
 	else {
 		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
@@ -330,10 +336,10 @@ struct command * readToken(char * str) {
 	int registersNumber;
 	int i;
 	char * tokenField;
-
+	//memset(tokenField.label, '\0' ,16);
 	tokenField = strtok_r(str, delims, &str);
 	//first thing is either label, or opcode
-
+	
 	int lastCharIndex=(strlen(tokenField))-1;
 	char lastCharacter=tokenField[lastCharIndex];
 	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
@@ -342,7 +348,9 @@ struct command * readToken(char * str) {
 		for (i = 0; i < lastCharIndex; i++) {
 			if(tokenField[i]==':') break;
 			token->label[i] = tokenField[i];
+			
 		}
+		//printf("%s\n",token->label);
 		//jump straight to next token
 		tokenField = strtok_r(str, delims, &str);
 	}
@@ -350,7 +358,7 @@ struct command * readToken(char * str) {
 
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-  token -> labelValue = NULL;
+  	token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -384,6 +392,7 @@ void assemblerPass1(struct map_node * labelTree, struct command * commandArray, 
 				error(ERR_REPEATED_LABEL);
 			}else{
 				map_put(labelTree, commandArray[i].label, 4*i);
+				printf("%s\n",commandArray[i].label);
 			}
 		}
 	}
@@ -479,13 +488,15 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
 int replace_label(struct map_node * labels, struct command * c, int * size){
-    int addr = 0;
-    
+    int addr = 0;  
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
+	printf("%s\n", c->labelValue);
+	printf("%d\n", addr);
         if(addr < -1 || addr > 4*((*size)-1)){
         	error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
+
         if(addr == ERROR){
             return ERROR;
         } else{
@@ -516,8 +527,7 @@ int betole(int b){
 
 int main(int argc, char *argv[]) {
 	char str[256];
-    char *outputPath;
-
+    	char *outputPath;
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
@@ -550,27 +560,24 @@ int main(int argc, char *argv[]) {
 	map_put(op_codes_tree, ".skip", 19);
     
 	if (argc != 3) {
-		printf("usage: %s filename", argv[0]);
+		error(ERR_WRONG_NUM_OF_ARGS);
+		return ERROR;
 	} else {
 		FILE *inputFile;
 		inputFile = fopen(argv[1], "r");
-
 		if (inputFile == NULL) {
-		//	perror("error opening %s!", argv[1]);
-			return 1;
+	   		error_file(ERR_CANT_OPEN_FILE, argv[1]);
+			return ERROR;
 		} else {
 			//SUCCESS - FILE OPENED
 			outputPath = argv[2];
 
 			int x;
 			const char EOL = '\n';
-
 			int i=0;
 			int j;
 			int line=0;
-
 			struct command * commandArray = NULL;
-
 			int nonempty=0;
 			int number_of_commands = 0;
 			struct command * t = NULL;
@@ -598,10 +605,10 @@ int main(int argc, char *argv[]) {
 					    commandArray[line] = *t;
 					    free(t -> labelValue);
 					    free(t);
-                        line++;
-                    } else {
-                        number_of_commands--; //line of code is empty
-                    }
+                		            line++;
+                			} else {
+                       				 number_of_commands--; //line of code is empty
+                   			}
 					//empty the buffer
 					memset(str, '\0' ,sizeof(str));
 					
@@ -616,8 +623,8 @@ int main(int argc, char *argv[]) {
 			fclose(inputFile);
 			//❤        L S  .  .  . e   n   d                              ❤
 
-                        //-----------PB
-
+                //-----------PB
+		
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
 		if(labelTree == NULL){
 			error(ERR_NOT_ENOUGH_MEMORY);
@@ -628,98 +635,19 @@ int main(int argc, char *argv[]) {
 	        labelTree -> left = NULL;
 	        labelTree -> right = NULL;
     		
-			assemblerPass1(labelTree, commandArray, number_of_commands);
-			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
-			binarywriter(outputPath, bitArray, number_of_commands);		
-					
+		assemblerPass1(labelTree, commandArray, number_of_commands);
+		int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
+		binarywriter(outputPath, bitArray, number_of_commands);		
+				
 			
-			//-----------PB
-			free(bitArray);
-			free(commandArray);
-
-			//Functions to do:
-		    freeTheTree(labelTree); 
-			freeTheTree(op_codes_tree); 
+		//-----------PB
+		free(bitArray);
+		free(commandArray);
+		freeTheTree(labelTree); 
+		freeTheTree(op_codes_tree); 
 		}
 	}
 	
 	return 0;
 }
 
-/*
-struct command readToken() {
-	struct command *token;
-	token = (struct command *)malloc(1*sizeof(struct command));
-
-	return *token;
-}
-
-void reader(char *filename, char **instructions, int number_of_commands, int msize){
-	FILE *fileptr = fopen(filename, "r");
-	instructions = createcommands(number_of_commands);
-	int i;
-	assert(commands!=NULL);
-	for(i=0; i<number_of_commands; i++){
-		commands[i] = getcommand(msize, fileptr);
-	}
-	fclose(fileptr);
-	return commands;
-}
-
-int arraysize(char *filename){
-	int number_of_commands = 0;
-	FILE *fileptr = fopen(filename, "r");
-	if (fileptr == NULL) {
-	    error_file(ERR_CANT_OPEN_FILE, filename);
-		return ERROR;
-	}
-	while ((x = fgetc(fileptr)) != EOF) {
-			    if(x == '\n') number_of_commands++;
-			}
-	rewind(fileptr);
-	fclose(fileptr);
-	return number_of_commands;
-}
-
-char * createcommand(int msize){
-	char *cptr;
-	cptr = (char *)malloc(msize*sizeof(char));
-	if(cptr==NULL){
-		perror("malloc");
-		return(NULL);
-	}
-	return cptr;
-}
-
-char ** createcommands(int number_of_commands){
-	int i;
-	char ** cptr = (char **)malloc(number_of_commands*sizeof(char *));
-	if(cptr==NULL){
-		perror("malloc");
-		return(NULL);
-	}
-	for(i = 0; i<number_of_commands; i++){
-		cptr[i] = NULL;
-	}
-	return cptr;
-}
-
-char * getcommand(int msize, FILE *fileptr){
-	char * command = createcommand(msize);
-	assert(command!=NULL);
-	fgets (command, msize, fileptr);
-	return command;
-}
-
-int main(int argc, char *argv[]){
-	char filename[100];
-	strcpy(filename,argv[1]);
-	int msize = 256;
-	int number_of_commands = arraysize(filename);
-	struct command *commandArray = (struct command *) malloc(number_of_commands * sizeof(struct command));
-	char **instructions = NULL;
-	instructions = reader(filename, instructions, number_of_commands, msize);
-	return 0;
-}
-
-*/
