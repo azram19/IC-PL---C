@@ -16,7 +16,9 @@
 #define ERR_REPEATED_LABEL 1
 #define ERR_CANT_OPEN_FILE 2
 
-char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
+char delims[] = " \t";
+
+
 char *outputPath;
 
 struct map_node {
@@ -158,35 +160,52 @@ struct command {
 
 //--------------- AS from here -----------------------------------------
 
-void Rtype(struct command *token, char *tokenField, char rest){	
-	token->r1 = reg_char_to_int(tokenField);	
-	tokenField = strtok_r(NULL, delims, &rest);
+void Rtype(char * str, struct command *token){	
+	char * tokenField;
+	char * rest;
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
+	token->r1 = reg_char_to_int(tokenField); 
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
 	token->r2 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(NULL, delims, &rest);
-	token->r3 = reg_char_to_int(tokenField);
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
+	token->r3 = reg_char_to_int(tokenField);	
 }
 
-void Itype(struct command *token, char *tokenField, char rest){	
+void Itype(char * str, struct command *token){	
+	int i;
+	char *tokenField;
+	char *rest;
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
 	token->r1 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(NULL, delims, &rest);
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
 	token->r2 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(NULL, delims, &rest);
-	if (isalpha(tokenField[0])) {
-		//this is a label
-		token -> labelValue = (char *) malloc(16 * sizeof(char));
-		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
-	} else {
-			//this is a constantvalue/address
-			//it may be in int format, or hex format	
-			if(tokenField[0] == '0' && tokenField[1] == 'x')
-				token->constantValue = strtol (tokenField,NULL,0);
-			else token->constantValue = atoi(tokenField);
+	tokenField = strtok_r(str, delims, &rest); 
+	str = rest;
+	if(isalpha(tokenField[0])){	// tokenField is a label
+		token->labelValue = (char *) malloc(16 * sizeof(char));
+		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+	}
+	else {
+		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex 
+			token->constantValue = strtol (tokenField, NULL, 0);
+			for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
 		}
+		else token->constantValue = atoi(tokenField); // tokenField is an integer
+	}
 }
 
-void JorStype(struct command *token, char *tokenField, char rest){	
-	if (isalpha(tokenField[0])) {
-	//this is a label
+void JorStype(char * str, struct command *token){	
+	int i;
+	char *tokenField;
+	char *rest;
+	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
+	if (isalpha(tokenField[0])){ // tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
 		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
 	} else {
@@ -204,19 +223,18 @@ void JorStype(struct command *token, char *tokenField, char rest){
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
-struct command readToken() {
+struct command readToken(char * str) {
 	struct command *token;
-	token = (struct command *)malloc(1*sizeof(struct command));
+	token = (struct command *)malloc(1 *sizeof(struct command));
 
 	char *rest;
 	int registersNumber;
 	int i;
 
-
-	char delims[] = " \t";
 	char * tokenField;
 
 	tokenField = strtok_r(str, delims, &rest);
+	str = rest;
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -229,7 +247,8 @@ struct command readToken() {
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
-		tokenField = strtok_r(NULL, delims, &rest);
+		tokenField = strtok_r(str, delims, &rest);
+		str = rest;
 	}
 	//next thing HAS TO BE an opcode
 
@@ -253,23 +272,17 @@ struct command readToken() {
 
 	registersNumber = token->type;
 
-
-	//jump to next
-	tokenField = strtok_r(NULL, delims, &rest);
-
 	//and now to checking...
 
 	if (registersNumber==1)
 		registersNumber--;
 
 
-
-
 //now to checking the registers....
 
-	if (registersNumber == 3) Rtype(token, tokenField, &rest);
-	else if (registersNumber == 2) Itype(token, tokenField, &rest);
-	else if (registersNumber == 0 || registersNumber == 5) JorStype(token, tokenField, &rest);
+	if (registersNumber == 3) Rtype(str, token);
+	else if (registersNumber == 2) Itype(str, token);
+	else if (registersNumber == 0 || registersNumber == 5) JorStype(str, token);
 
 	//now we have a complete token.
 	return *token;
@@ -404,6 +417,7 @@ int betole(int b){
 }
 
 int main(int argc, char *argv[]) {
+	char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 
 	op_codes_tree -> key = NULL;
@@ -475,7 +489,7 @@ int main(int argc, char *argv[]) {
 
 					//pass the token to the command Array.
 					if(nonempty){ 
-					    commandArray[line] = readToken();
+					    commandArray[line] = readToken(str);
                         line++;
                     } else {
                         number_of_commands--; //line of code is empty
