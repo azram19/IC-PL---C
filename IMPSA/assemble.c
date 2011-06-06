@@ -223,7 +223,7 @@ struct command {
  * Parser for R-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Rtype(char * str, struct command *token){	
 	char * tokenField;
@@ -239,7 +239,7 @@ void Rtype(char * str, struct command *token){
  * Parser for I-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Itype(char * str, struct command *token){	
 	int i;
@@ -269,7 +269,7 @@ void Itype(char * str, struct command *token){
  * Parser for J-type and S-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @modified_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void JorStype(char * str, struct command *token){	
 	int i;
@@ -297,7 +297,6 @@ struct command readToken(char * str) {
 
 	int registersNumber;
 	int i;
-
 	char * tokenField;
 
 	tokenField = strtok_r(str, delims, &str);
