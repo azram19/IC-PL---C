@@ -29,6 +29,9 @@
 #define ERR_WRONG_REGISTER 3
 #define ERR_NOT_ENOUGH_MEMORY 4
 #define ERR_CANT_OPEN_FILE 5
+#define ERR_EMPTY_STACK 6
+#define ERR_FULL_STACK 7
+#define STACK_INDEX_OUT_OF_BOUNDS 8
 
 /*
  * Masks, they have to be shifted to the right position.
@@ -37,6 +40,8 @@
 #define M_REGISTER 0x0000001F
 #define M_ADDRESS 0x03FFFFFF
 #define M_IMM 0x0000FFFF
+
+#define MAX_STACK_SIZE 200
 
 /*
  * Struct used to hold current state of IMP machine.
@@ -55,6 +60,7 @@ struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
     int PC;
+		struct stack* stackptr;
 };
 
 int get_register(struct IMPSS*, int);
@@ -178,7 +184,22 @@ int error(int error_code){
                 fprintf(stderr, 
                         "Error: Can not open the file. Program terminated.\n");    
                 break;
-        }         
+        }
+				case ERR_EMPTY_STACK: {
+								fprintf(stderr,
+												"Error: Stack is empty.\n");
+								break;
+				}        
+				case ERR_FULL_STACK: {
+								fprintf(stderr,
+												"Error: Stack is full.\n");
+								break;
+				}
+				case STACK_INDEX_OUT_OF_BOUNDS: {
+								fprintf(stderr,
+												"Error: Index out of bounds.\n");
+								break;
+				}
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -545,6 +566,33 @@ int jal(struct IMPSS* state, int body){
 }
 
 /*
+ * Calls another function
+ * 
+ * @instruction-type J
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int call(struct IMPSS* state, int body){
+	int address = body & M_ADDRESS;
+	  
+  push(state->PC+4, state->stackptr);
+	state->PC = address;
+ 
+	return SUCCESS;
+}
+
+/*
+ * Returns from a called function
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int ret(struct IMPSS* state, int body){
+	state->PC = pop(state->stackptr);	
+	
+	return SUCCESS;
+}
+
+
+/*
  * OpCodeFunction is a function pointer and points to a function
  * which takes IMPSS* and int as arguments and returns an int
  */
@@ -622,6 +670,64 @@ int signed_extension(int in){
     return r;
 }
 
+
+/*
+ * Struct holds the stack
+ *
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+struct stack{
+	int stackArr[MAX_STACK_SIZE];
+	int top;
+};
+
+/*
+ * Returns 1 if stack is empty, 0 otherwise.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int isEmpty(struct stack * Stack){
+	return (Stack->top)<0;
+}
+
+/*
+ * Puts newItem on the top of the stack.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+void push(int newItem, struct stack* Stack){
+	if((Stack->top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
+	else{
+		(Stack->top)++;
+		Stack->stackArr[Stack->top] = newItem;
+	}
+}
+
+/*
+ * Removes top element from the stack.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int pop(struct stack* Stack){
+	if(isEmpty(Stack)) error(ERR_EMPTY_STACK);
+	else{
+		int topItem = Stack->stackArr[Stack->top];
+		(Stack->top)--;
+		return topItem;
+	}
+}
+
+/*
+ * Returns the item on the stack at given index.
+ * 
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ */
+int get(int index, struct stack* Stack){
+	if(index<0 || (index+1)>= MAX_STACK_SIZE) error(STACK_INDEX_OUT_OF_BOUNDS);
+	else return Stack->stackArr[index];
+}
+
+
 /*
  * Main
  *
@@ -686,15 +792,5 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
 
 
