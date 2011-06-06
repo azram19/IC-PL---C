@@ -22,7 +22,7 @@ char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
 char *outputPath;
 
 struct map_node {
-	char * key;
+	long long int key;
 	int value;
 	struct map_node * left;
 	struct map_node * right;
@@ -30,25 +30,56 @@ struct map_node {
 
 struct map_node * op_codes_tree = NULL;
 
+/*
+ * Generates hashcode for the given string.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Hashcode
+ */
+long long int get_hashcode(char * s){
+    long long int h = 0;
+    int i = 0;
+    int p = 101;
+    long long int pow = p;
+    
+    while(s[i] != '\0'){
+        h += s[i] * pow;
+        pow *= p;
+        i++;
+    }
+    
+    return (h == -1) ? 1 : h;
+}
+
+/*
+ * Inserts element into the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
 int map_put(struct map_node * root, char * key, int value) {
     if(key[0] == '\0') return SUCCESS;
 
 	struct map_node * node = malloc(sizeof(struct map_node));
 
-	node -> key = key;
+	node -> key = get_hashcode(key);
 	node -> value = value;
 	node -> left = NULL;
 	node -> right = NULL;
 
-	tree_insert(root, key, node);
+	tree_insert(root, node -> key, node);
 	return SUCCESS;
 }
 
-int tree_insert(struct map_node * root, char * key, struct map_node * node) {
-	if (root -> key == NULL) {
-		root -> key = node -> key;
+/*
+ * Inserts element into the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ */
+int tree_insert(struct map_node * root, long long int key, struct map_node * node) {
+	if (root -> key == EMPTY_KEY) {
+		root -> key = key;
 		root -> value = node -> value;
-	} else if (strcmp(root -> key, key) > 0) {
+	} else if (root -> key > key) {
 		if (root -> right == NULL) {
 			root -> right = node;
 		} else {
@@ -65,41 +96,45 @@ int tree_insert(struct map_node * root, char * key, struct map_node * node) {
 	return SUCCESS;
 }
 
+/*
+ * Finds element in the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Either value assigned to the key, or an EMPTY_KEY.
+ */
 int map_get(struct map_node * root, char * key) {
-	if (root == NULL || root -> key == NULL) {
+	if (root == NULL || root -> key == EMPTY_KEY) {
 		return ERROR;
 	}
 
-    int compare = strcmp(root -> key, key);
-
-	if (compare == 0) {
+    long long int hash = get_hashcode(key);
+    
+    if (root -> key == hash) {
 		return root -> value;
-	} else if (compare > 0) {
+	} else if (root -> key > hash) {
 		return map_get(root -> right, key);
 	} else {
 		return map_get(root -> left, key);
 	}
 }
 
-long long int get_hashcode(char * s){
-    long long int h = 0;
-    int i = 0;
-    int p = 101;
-    long long int pow = p;
-    
-    while(s[i] != '\0'){
-        h += s[i] * pow;
-        pow *= p;
-        i++;
-    }
-    
-    return (h == -1) ? 1 : h;
-}
 
+/*
+ * Returns OpCode assigned to the given instruction.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return OpCode
+ */
 int op_char_to_int(char * op_code) {
 	return map_get(op_codes_tree, op_code);
 }
 
+/*
+ * Returns type of the instruction.
+ *
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Type
+ */
 int op_to_type(int op_code) {
 	int op_type[20] = { TYPE_NA, TYPE_R, TYPE_I, TYPE_R, TYPE_I, TYPE_R,
 			TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I, TYPE_I,
@@ -352,7 +387,7 @@ int signed_reduction(int r){
 }
 
 /*
- * Converts srtuct into binary represantation; instruction.
+ * Converts struct into its binary represantation; instruction.
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
@@ -435,7 +470,7 @@ int betole(int b){
 int main(int argc, char *argv[]) {
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
 
-	op_codes_tree -> key = NULL;
+	op_codes_tree -> key = EMPTY_KEY;
 	op_codes_tree -> left = NULL;
 	op_codes_tree -> right = NULL;
 
@@ -527,7 +562,7 @@ int main(int argc, char *argv[]) {
 
     		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
     		
-    		labelTree -> key = NULL;
+    		labelTree -> key = EMPTY_KEY;
 	        labelTree -> left = NULL;
 	        labelTree -> right = NULL;
     		
