@@ -518,3 +518,80 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/*
+struct command readToken() {
+	struct command *token;
+	token = (struct command *)malloc(1*sizeof(struct command));
+
+	return *token;
+}
+
+void reader(char *filename, char **instructions, int number_of_commands, int msize){
+	FILE *fileptr = fopen(filename, "r");
+	instructions = createcommands(number_of_commands);
+	int i;
+	assert(commands!=NULL);
+	for(i=0; i<number_of_commands; i++){
+		commands[i] = getcommand(msize, fileptr);
+	}
+	fclose(fileptr);
+	return commands;
+}
+
+int arraysize(char *filename){
+	int number_of_commands = 0;
+	FILE *fileptr = fopen(filename, "r");
+	if (fileptr == NULL) {
+	    error_file(ERR_CANT_OPEN_FILE, filename);
+		return ERROR;
+	}
+	while ((x = fgetc(fileptr)) != EOF) {
+			    if(x == '\n') number_of_commands++;
+			}
+	rewind(fileptr);
+	fclose(fileptr);
+	return number_of_commands;
+}
+
+char * createcommand(int msize){
+	char *cptr;
+	cptr = (char *)malloc(msize*sizeof(char));
+	if(cptr==NULL){
+		perror("malloc");
+		return(NULL);
+	}
+	return cptr;
+}
+
+char ** createcommands(int number_of_commands){
+	int i;
+	char ** cptr = (char **)malloc(number_of_commands*sizeof(char *));
+	if(cptr==NULL){
+		perror("malloc");
+		return(NULL);
+	}
+	for(i = 0; i<number_of_commands; i++){
+		cptr[i] = NULL;
+	}
+	return cptr;
+}
+
+char * getcommand(int msize, FILE *fileptr){
+	char * command = createcommand(msize);
+	assert(command!=NULL);
+	fgets (command, msize, fileptr);
+	return command;
+}
+
+int main(int argc, char *argv[]){
+	char filename[100];
+	strcpy(filename,argv[1]);
+	int msize = 256;
+	int number_of_commands = arraysize(filename);
+	struct command *commandArray = (struct command *) malloc(number_of_commands * sizeof(struct command));
+	char **instructions = NULL;
+	instructions = reader(filename, instructions, number_of_commands, msize);
+	return 0;
+}
+
+*/
