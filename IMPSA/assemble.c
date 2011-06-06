@@ -15,8 +15,16 @@
 #define HALT 0
 #define ERROR -1
 
-#define ERR_REPEATED_LABEL 1
-#define ERR_CANT_OPEN_FILE 2
+#define NUMBER_OF_INSTRUCTIONS 20
+#define MAX_NUMBER_OF_REGISTERS 32
+
+#define ERR_UNDEFINED_OPERATION 1
+#define ERR_ILLEGAL_MEMORY_ACCESS 2
+#define ERR_WRONG_REGISTER 3
+#define ERR_NOT_ENOUGH_MEMORY 4
+#define ERR_REPEATED_LABEL 5
+#define ERR_CANT_OPEN_FILE 6
+
 
 char str[256]; //Wulgarne, paskudne, nie potrafie inaczej.
 char *outputPath;
@@ -60,6 +68,10 @@ int map_put(struct map_node * root, char * key, int value) {
     if(key[0] == '\0') return SUCCESS;
 
 	struct map_node * node = malloc(sizeof(struct map_node));
+	if(node == NULL){
+		error(ERR_NOT_ENOUGH_MEMORY);
+		return ERROR;	
+	}
 
 	node -> key = get_hashcode(key);
 	node -> value = value;
@@ -155,6 +167,26 @@ int op_to_type(int op_code) {
 int error(int error_code){
     
     switch(error_code){
+        case ERR_UNDEFINED_OPERATION: {
+                fprintf(stderr, 
+                        "Error: This operation is not defined.\n");  
+                break;
+            }
+        case ERR_ILLEGAL_MEMORY_ACCESS: {
+                 fprintf(stderr, 
+                        "Error: Illegal memory access.\n");
+                break;
+            }
+        case ERR_WRONG_REGISTER: {
+                fprintf(stderr, 
+                        "Error 404: register doesn't exist. Program terminated.\n");        
+                break;
+            }
+        case ERR_NOT_ENOUGH_MEMORY: {
+                fprintf(stderr, 
+                        "Error: Not enough memory. Program terminated.\n");    
+                break;
+            }
         case ERR_REPEATED_LABEL: {
                 fprintf(stderr, 
                         "Error: There are two labels with the same name.\n");  
@@ -164,7 +196,7 @@ int error(int error_code){
                 fprintf(stderr, 
                         "Error: Can not open the file. Program terminated.\n");    
                 break;
-        }         
+        }          
     }
     printf("\n");
     exit(EXIT_FAILURE);
@@ -367,9 +399,12 @@ void assemblerPass1(struct map_node * labelTree, struct command * commandArray, 
 
 int * assemblerPass2(struct map_node * labelTree, struct command * commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
+	if(bitArray == NULL){
+		error(ERR_NOT_ENOUGH_MEMORY);	
+	}
 	int i, j, nba = bitArray;
 	for(i = 0, j =0; i < (*size); i++, j++){
-	    replace_label(labelTree, &commandArray[j]);
+	    replace_label(labelTree, &commandArray[j], size);
 	    bitArray[i] = binary_converter(&commandArray[j], &i, size, bitArray, &nba);
 	    if(nba != bitArray){
 	        bitArray = nba;
@@ -403,7 +438,14 @@ int signed_reduction(int r){
  */
 int binary_converter(struct command * c, int * i, int * size, int * ba, int * nba){
     int instr = 0;
-    
+    if(c->opcode < 0 || c->opcode >= NUMBER_OF_INSTRUCTIONS){
+        error(ERR_UNDEFINED_OPERATION);
+    }
+    if(c->r1 < 0 || c->r1 >= MAX_NUMBER_OF_REGISTERS ||
+	c->r2 < 0 || c->r2 >= MAX_NUMBER_OF_REGISTERS ||
+	c->r3 < 0 || c->r3 >= MAX_NUMBER_OF_REGISTERS){
+        error(ERR_WRONG_REGISTER);
+    }
     if(c -> type != TYPE_S) instr |= (c -> opcode << 26);
     
     if(c -> type == TYPE_R){
@@ -413,7 +455,6 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
     } else if(c -> type == TYPE_I){
         instr |= (c -> r1 << 21);
         instr |= (c -> r2 << 16);
-        
         if(c -> opcode <= 14 && c -> opcode >= 9){
             instr |= signed_reduction((c -> constantValue - ((*i)<<2)) >> 2);
         } else {
@@ -444,11 +485,14 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int replace_label(struct map_node * labels, struct command * c){
+int replace_label(struct map_node * labels, struct command * c, int * size){
     int addr = 0;
     
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
+        if(addr < 0 || addr > 4*((*size)-1)){
+        	error(ERR_ILLEGAL_MEMORY_ACCESS);
+    	}
         if(addr == ERROR){
             return ERROR;
         } else{
@@ -479,6 +523,10 @@ int betole(int b){
 
 int main(int argc, char *argv[]) {
 	op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
+	if(op_codes_tree == NULL){
+		error(ERR_NOT_ENOUGH_MEMORY);
+		return ERROR;	
+	}
 
 	op_codes_tree -> key = EMPTY_KEY;
 	op_codes_tree -> left = NULL;
@@ -570,7 +618,11 @@ int main(int argc, char *argv[]) {
 
                         //-----------PB
 
-    		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 	
+    		struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
+		if(labelTree == NULL){
+			error(ERR_NOT_ENOUGH_MEMORY);
+			return ERROR;	
+		}	
     		
     		labelTree -> key = EMPTY_KEY;
 	        labelTree -> left = NULL;
