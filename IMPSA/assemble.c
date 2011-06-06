@@ -356,8 +356,6 @@ struct command readToken(char * str) {
 		registersNumber--;
 
 
-//now to checking the registers....
-
 	if (registersNumber == 3) Rtype(str, token);
 	else if (registersNumber == 2) Itype(str, token);
 	else if (registersNumber == 0 || registersNumber == 5) JorStype(str, token);
