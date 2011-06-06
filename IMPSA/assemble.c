@@ -227,15 +227,11 @@ struct command {
  */
 void Rtype(char * str, struct command *token){	
 	char * tokenField;
-	char * rest;
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r1 = reg_char_to_int(tokenField); 
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r2 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r3 = reg_char_to_int(tokenField);	
 }
 
@@ -248,15 +244,11 @@ void Rtype(char * str, struct command *token){
 void Itype(char * str, struct command *token){	
 	int i;
 	char *tokenField;
-	char *rest;
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r1 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	token->r2 = reg_char_to_int(tokenField);
-	tokenField = strtok_r(str, delims, &rest); 
-	str = rest;
+	tokenField = strtok_r(str, delims, &str); 
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token->labelValue = (char *) malloc(16 * sizeof(char));
 		for(i=0; i < 16; ++i) token->labelValue[i] = tokenField[i];
@@ -282,9 +274,7 @@ void Itype(char * str, struct command *token){
 void JorStype(char * str, struct command *token){	
 	int i;
 	char *tokenField;
-	char *rest;
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	if (isalpha(tokenField[0])){ // tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
 		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
@@ -305,14 +295,12 @@ struct command readToken(char * str) {
 	struct command *token;
 	token = (struct command *)malloc(sizeof(struct command));
 
-	char *rest;
 	int registersNumber;
 	int i;
 
 	char * tokenField;
 
-	tokenField = strtok_r(str, delims, &rest);
-	str = rest;
+	tokenField = strtok_r(str, delims, &str);
 	//first thing is either label, or opcode
 
 	int lastCharIndex=(strlen(tokenField))-1;
@@ -325,14 +313,13 @@ struct command readToken(char * str) {
 			token->label[i] = tokenField[i];
 		}
 		//jump straight to next token
-		tokenField = strtok_r(str, delims, &rest);
-		str = rest;
+		tokenField = strtok_r(str, delims, &str);
 	}
 	//next thing HAS TO BE an opcode
 
 	token -> opcode = op_char_to_int(tokenField);
 	token -> type = op_to_type(token->opcode);
-    token -> labelValue = NULL;
+  token -> labelValue = NULL;
     
 	/*and now, all that is left is:
 	 * R (3)  | 6 - 10 R1 | 11 - 15 R2 | 16 - 20 R3 | unused |
@@ -347,11 +334,8 @@ struct command readToken(char * str) {
 
 	registersNumber = token->type;
 
-	//and now to checking...
-
 	if (registersNumber==1)
 		registersNumber--;
-
 
 	if (registersNumber == 3) Rtype(str, token);
 	else if (registersNumber == 2) Itype(str, token);
