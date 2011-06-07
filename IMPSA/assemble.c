@@ -646,31 +646,29 @@ int main(int argc, char *argv[]) {
 	if (argc != 3) {
 		error(ERR_WRONG_NUM_OF_ARGS);
 		return ERROR;
-	} else {
-		FILE *inputFile = NULL;
-		inputFile = fopen(argv[1], "r");
-		if (inputFile == NULL) {
-	   		error_file(ERR_CANT_OPEN_FILE, argv[1]);
-			return ERROR;
-		} else {
-			snode * op_codes_tree = createOpcodeTree(); 
-			char *outputPath = argv[2];
-			int number_of_commands = fileSize(inputFile);
-			int ii = number_of_commands;
-			scommand **commandArray = createCommandArray(number_of_commands);
-			number_of_commands = tokenise(inputFile, commandArray, number_of_commands, op_codes_tree);
-			fclose(inputFile);
-			freeTheTree(op_codes_tree);
-			
-    		snode * labelTree = createLabelTree();	
-			assemblerPass1(labelTree, commandArray, number_of_commands);
-			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
-			binarywriter(outputPath, bitArray, number_of_commands);		
-					
-			free(bitArray);
-		    freeTheTree(labelTree); 
-			freeCommandArray(commandArray, ii);
-		}
 	}
+	FILE *inputFile = NULL;
+	inputFile = fopen(argv[1], "r");
+	if (inputFile == NULL) {
+	   	error_file(ERR_CANT_OPEN_FILE, argv[1]);
+		return ERROR;
+	}
+	snode * op_codes_tree = createOpcodeTree(); 
+	char *outputPath = argv[2];
+	int number_of_commands = fileSize(inputFile);
+	int ii = number_of_commands;
+	scommand **commandArray = createCommandArray(number_of_commands);
+	number_of_commands = tokenise(inputFile, commandArray, number_of_commands, op_codes_tree);
+	fclose(inputFile);
+	freeTheTree(op_codes_tree);
+			
+    snode * labelTree = createLabelTree();	
+	assemblerPass1(labelTree, commandArray, number_of_commands);
+	int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
+	binarywriter(outputPath, bitArray, number_of_commands);		
+					
+	free(bitArray);
+	freeTheTree(labelTree); 
+	freeCommandArray(commandArray, ii);
 	return 0;
 }
