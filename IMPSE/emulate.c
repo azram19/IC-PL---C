@@ -687,7 +687,7 @@ struct stack{
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 int isEmpty(struct stack * Stack){
-	return (Stack->top)<0;
+	return (Stack->top)<=0;
 }
 
 /*
