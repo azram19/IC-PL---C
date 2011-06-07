@@ -256,7 +256,7 @@ struct command {
 
 	//J (3) type function.
 	//0-5 opcode  | 6 - 31 Address
-	int type;
+	int type; 
 
 	char label[16];
 	int opcode;
@@ -276,13 +276,13 @@ struct command {
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Rtype(char * str, scommand *token){	
-	char * tokenField;
+	char * tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
-	token->r1 = reg_char_to_int(tokenField); 
+	token -> r1 = reg_char_to_int(tokenField); 
 	tokenField = strtok_r(str, delims, &str);
-	token->r2 = reg_char_to_int(tokenField);
+	token -> r2 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
-	token->r3 = reg_char_to_int(tokenField);	
+	token -> r3 = reg_char_to_int(tokenField);	
 }
 
 /*
@@ -292,8 +292,7 @@ void Rtype(char * str, scommand *token){
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Itype(char * str, scommand *token){	
-	int i;
-	char *tokenField;
+	char *tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
 	token -> r1 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
@@ -301,15 +300,13 @@ void Itype(char * str, scommand *token){
 	tokenField = strtok_r(str, delims, &str);
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
-		for(i = 0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+		strcpy(token -> labelValue, tokenField);
 	}
 	else {
 		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
-			token->constantValue = strtol(tokenField, NULL, 0);
+			token -> constantValue = strtol(tokenField, NULL, 0);
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for(i = 0; i < 16; i++){
-			    token->labelValue[i] = tokenField[i];
-			}
+			strcpy(token -> labelValue, tokenField);
 		}
 		else token->constantValue = atoi(tokenField); // tokenField is an integer
 	}
@@ -322,12 +319,11 @@ void Itype(char * str, scommand *token){
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void JorStype(char * str, scommand *token){	
-	int i;
-	char *tokenField;
+	char *tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
 	if (isalpha(tokenField[0])){ // tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
-		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
+		strcpy(token -> labelValue, tokenField);
 	} else {
 		//it may be in int format, or hex format
 			if(tokenField[0] == '0' && tokenField[1] == 'x')
@@ -416,7 +412,7 @@ int * assemblerPass2(snode * labelTree, scommand ** commandArray, int * size){
 	if(bitArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
-	int i = j = nba = 0;
+	int i = 0, j = 0, nba = 0;
 	for(i = 0, j = 0; i < (*size); i++, j++){
 	    nba = 0;
 	    replace_label(labelTree, commandArray[j], size);
