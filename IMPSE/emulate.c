@@ -585,7 +585,7 @@ int call(struct IMPSS* state, int body){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-int ret(struct IMPSS* state, int body){
+int ret(struct IMPSS* state){
 	state->PC = pop(state->stackptr);	
 	
 	return SUCCESS;
@@ -695,12 +695,13 @@ int isEmpty(struct stack * Stack){
  * 
  * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void push(int newItem, struct stack* Stack){
+int push(int newItem, struct stack* Stack){
 	if((Stack->top+1)>=MAX_STACK_SIZE) error(ERR_FULL_STACK);
 	else{
-		(Stack->top)++;
+		Stack->top++;
 		Stack->stackArr[Stack->top] = newItem;
 	}
+	return SUCCESS;
 }
 
 /*
