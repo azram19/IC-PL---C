@@ -665,13 +665,13 @@ int main(int argc, char *argv[]) {
 	fclose(inputFile);
 	freeTheTree(op_codes_tree);
 			
-    snode * labelTree = createLabelTree();	
+	snode * labelTree = createLabelTree();	
 	assemblerPass1(labelTree, commandArray, number_of_commands);
 	int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
 	binarywriter(outputPath, bitArray, number_of_commands);		
 					
 	free(bitArray);
-    freeTheTree(labelTree); 
+	freeTheTree(labelTree); 
 	freeCommandArray(commandArray, noca_length);
 	return 0;
 }
