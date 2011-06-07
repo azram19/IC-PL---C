@@ -83,6 +83,9 @@ int map_put(snode * root, char * key, int value) {
 	return SUCCESS;
 }
 
+/*
+ * @author Piotr Bar
+ */
 int freeTheTree(snode * root){
 	if(root == NULL) {
 		return SUCCESS;
@@ -166,6 +169,10 @@ int op_to_type(int op_code) {
 	return op_type[op_code];
 }
 
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
 int error(int error_code){
     
     switch(error_code){
@@ -210,6 +217,9 @@ int error(int error_code){
     return ERROR;
 }
 
+/*
+ * @author Lukasz Koprowski
+ */
 int error_file(int error_code, char * filename){
     fprintf(stderr, "Problem with file: %s\n", filename); 
     error(error_code);
@@ -263,7 +273,7 @@ struct command {
  * Parser for R-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Rtype(char * str, scommand *token){	
 	char * tokenField;
@@ -279,7 +289,7 @@ void Rtype(char * str, scommand *token){
  * Parser for I-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void Itype(char * str, scommand *token){	
 	int i;
@@ -309,7 +319,7 @@ void Itype(char * str, scommand *token){
  * Parser for J-type and S-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
 void JorStype(char * str, scommand *token){	
 	int i;
@@ -330,6 +340,7 @@ void JorStype(char * str, scommand *token){
  * Translates code line into struct token, and then returns it
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @author Agniszka Szefer
  */
 scommand * readToken(char * str, snode * op_codes_tree) {
 	scommand * token = NULL;
@@ -381,7 +392,7 @@ scommand * readToken(char * str, snode * op_codes_tree) {
 //-------------PB
 
 /*
- * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
+ * @author Piotr Bar
  */
 void assemblerPass1(snode * labelTree, scommand ** commandArray, int size){ 
 	int i = 0;
@@ -396,6 +407,10 @@ void assemblerPass1(snode * labelTree, scommand ** commandArray, int size){
 	}
 }
 
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
 int * assemblerPass2(snode * labelTree, scommand ** commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
 	if(bitArray == NULL){
@@ -413,6 +428,9 @@ int * assemblerPass2(snode * labelTree, scommand ** commandArray, int * size){
 	return bitArray;
 }
 
+/*
+ * @author Piotr Bar
+ */
 void binarywriter(char * filename, int * instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "wb");
 	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
@@ -503,6 +521,9 @@ int replace_label(snode * labels, scommand * c, int * size){
     return SUCCESS;
 }
 
+/*
+ * @author Piotr Bar
+ */
 scommand **createCommandArray(int number_of_commands){
 	scommand **commandArray = (scommand **) malloc(number_of_commands * sizeof(scommand *));
 	if(commandArray == NULL){
@@ -510,7 +531,10 @@ scommand **createCommandArray(int number_of_commands){
 	}
 	return commandArray;
 }
-		
+
+/*
+ * @author Lukasz Koprowski
+ */
 snode * createLabelTree(){
 	snode * labelTree = (snode *) malloc(sizeof(snode)); 
 	if(labelTree == NULL){
@@ -522,6 +546,9 @@ snode * createLabelTree(){
 	return labelTree;
 }
 
+/*
+ * @author Lukasz Koprowski
+ */
 snode * createOpcodeTree(){
 	snode * op_codes_tree = (snode * ) malloc(sizeof(snode));
 	if(op_codes_tree == NULL){
@@ -564,6 +591,9 @@ int fileSize(FILE *inputFile){
 	return number_of_commands;
 }
 
+/*
+ * @author Lukasz Kmiecik
+ */
 int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, snode * op_codes_tree){
 	char str[256];
 	int x;
@@ -600,6 +630,10 @@ int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, s
 	return number_of_commands;
 }
 
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
 void freeCommandArray(scommand **commandArray, int ii){
 	int i = 0;
 	for(i = 0; i < ii; i++){
@@ -609,6 +643,9 @@ void freeCommandArray(scommand **commandArray, int ii){
 	free(commandArray);
 }
 
+/*
+ * @author Piotr Bar
+ */
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
 		error(ERR_WRONG_NUM_OF_ARGS);
