@@ -31,6 +31,8 @@ char delims[] = " \t";
 typedef struct map_node snode;
 typedef struct command scommand;
 
+snode * map_find(snode *, long long int);
+
 struct map_node {
 	long long int key;
 	int value;
@@ -49,12 +51,10 @@ long long int get_hashcode(char * s){
     long long int h = 0;
     int i = 0;
     int p = 101;
-    long long int pow = p;
+    long long int pow = 1;
     
     while(s[i] != '\0'){
-        h += s[i] * pow;
-        pow *= p;
-        i++;
+        h += s[i++] * (pow *= p);
     }
     
     return (h == -1) ? 1 : h;
@@ -79,7 +79,18 @@ int map_put(snode * root, char * key, int value) {
 	node -> left = NULL;
 	node -> right = NULL;
 
-	tree_insert(root, node -> key, node);
+	snode * fnode = map_find(root, node -> key);
+	
+	if (fnode -> key == EMPTY_KEY) {
+		fnode -> key = node -> key;
+		fnode -> value = node -> value;
+		free(node);
+	} else if (fnode -> key > node -> key) {
+		fnode -> right = node;
+	} else {
+		fnode -> left = node;
+	}
+	
 	return SUCCESS;
 }
 
@@ -97,54 +108,42 @@ int freeTheTree(snode * root){
 }
 
 /*
- * Inserts element into the map.
- * 
- * @author Lukasz Koprowski <azram19@gmail.com>
- */
-int tree_insert(snode * root, long long int key, snode * node) {
-	if (root -> key == EMPTY_KEY) {
-		root -> key = key;
-		root -> value = node -> value;
-		free(node);
-	} else if (root -> key > key) {
-		if (root -> right == NULL) {
-			root -> right = node;
-		} else {
-			tree_insert(root -> right, key, node);
-		}
-	} else {
-		if (root -> left == NULL) {
-			root -> left = node;
-		} else {
-			tree_insert(root -> left, key, node);
-		}
-	}
-    
-	return SUCCESS;
-}
-
-/*
- * Finds element in the map.
+ * Finds value of an element in the map.
  * 
  * @author Lukasz Koprowski <azram19@gmail.com>
  * @return Either value assigned to the key, or an EMPTY_KEY.
  */
 int map_get(snode * root, char * key) {
-	if (root == NULL || root -> key == EMPTY_KEY) {
-		return ERROR;
-	}
-
     long long int hash = get_hashcode(key);
     
-    if (root -> key == hash) {
-		return root -> value;
-	} else if (root -> key > hash) {
-		return map_get(root -> right, key);
-	} else {
-		return map_get(root -> left, key);
-	}
+    snode * fnode = map_find(root, hash);
+    
+    if(fnode != NULL && fnode -> key == hash){
+        return fnode -> value;
+    } else {
+        return ERROR;
+    }
 }
 
+/*
+ * Finds node in the map.
+ * 
+ * @author Lukasz Koprowski <azram19@gmail.com>
+ * @return Either node ot a parent it'd have.
+ */
+snode * map_find(snode * root, long long int key){
+    if (root == NULL ) {
+		return NULL;
+	} else if (root -> key == key || root -> key == EMPTY_KEY) {
+		return root;
+	} else if (root -> key > key) {
+	    if(root -> right == NULL) return root;
+		return map_find(root -> right, key);
+	} else {
+	    if(root -> left == NULL) return root;
+		return map_find(root -> left, key);
+	}
+}
 
 /*
  * Returns OpCode assigned to the given instruction.
@@ -188,7 +187,7 @@ int error(int error_code){
             }
         case ERR_WRONG_REGISTER: {
                 fprintf(stderr, 
-                        "Error 404: register doesn't exist. Program terminated.\n");        
+                    "Error 404: register doesn't exist. Program terminated.\n");        
                 break;
             }
         case ERR_NOT_ENOUGH_MEMORY: {
@@ -379,9 +378,10 @@ scommand * readToken(char * str, snode * op_codes_tree) {
 
 	if (token -> type == TYPE_R) Rtype(str, token);
 	else if (token -> type == TYPE_I) Itype(str, token);
-	else if (token -> type == TYPE_J || token -> type == TYPE_S) JorStype(str, token);
+	else if (token -> type == TYPE_J || token -> type == TYPE_S){
+        JorStype(str, token);
+    }
 
-	//now we have a complete token.
 	return token;
 }
 
@@ -521,7 +521,9 @@ int replace_label(snode * labels, scommand * c, int * size){
  * @author Piotr Bar
  */
 scommand **createCommandArray(int number_of_commands){
-	scommand **commandArray = (scommand **) malloc(number_of_commands * sizeof(scommand *));
+	scommand **commandArray = 
+	    (scommand **) malloc(number_of_commands * sizeof(scommand *));
+	
 	if(commandArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
@@ -550,6 +552,7 @@ snode * createOpcodeTree(){
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 	}
+	
 	op_codes_tree -> key = EMPTY_KEY;
 	op_codes_tree -> left = NULL;
 	op_codes_tree -> right = NULL;
@@ -574,6 +577,7 @@ snode * createOpcodeTree(){
 	map_put(op_codes_tree, "jal", 17);
 	map_put(op_codes_tree, ".fill", 18);
 	map_put(op_codes_tree, ".skip", 19);
+	
 	return op_codes_tree;
 }
 
@@ -590,7 +594,7 @@ int fileSize(FILE *inputFile){
 /*
  * @author Lukasz Kmiecik
  */
-int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, snode * op_codes_tree){
+void tokenise(FILE *inputFile, scommand **commandArray, int * number_of_commands, snode * op_codes_tree){
 	char str[256];
 	int x;
 	const char EOL = '\n';
@@ -612,7 +616,7 @@ int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, s
 				commandArray[line] = readToken(str, op_codes_tree);
 				line++;
 			} else {
-				number_of_commands--; //line of code is empty
+				(*number_of_commands) --; //line of code is empty
 			}
 			//empty the buffer
 			memset(str, '\0', sizeof(str));
@@ -623,16 +627,15 @@ int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, s
 			i++;
 		}
 	}
-	return number_of_commands;
 }
 
 /*
  * @author Piotr Bar
  * @author Lukasz Koprowski
  */
-void freeCommandArray(scommand **commandArray, int ii){
+void freeCommandArray(scommand **commandArray, int array_length){
 	int i = 0;
-	for(i = 0; i < ii; i++){
+	for(i = 0; i < array_length; i++){
 	    if(commandArray[i] != NULL) free(commandArray[i] -> labelValue);
 	    free(commandArray[i]);
 	}
@@ -656,9 +659,9 @@ int main(int argc, char *argv[]) {
 			snode * op_codes_tree = createOpcodeTree(); 
 			char *outputPath = argv[2];
 			int number_of_commands = fileSize(inputFile);
-			int ii = number_of_commands;
+			int noca_length = number_of_commands;
 			scommand **commandArray = createCommandArray(number_of_commands);
-			number_of_commands = tokenise(inputFile, commandArray, number_of_commands, op_codes_tree);
+			tokenise(inputFile, commandArray, &number_of_commands, op_codes_tree);
 			fclose(inputFile);
 			freeTheTree(op_codes_tree);
 			
@@ -669,7 +672,7 @@ int main(int argc, char *argv[]) {
 					
 			free(bitArray);
 		    freeTheTree(labelTree); 
-			freeCommandArray(commandArray, ii);
+			freeCommandArray(commandArray, noca_length);
 		}
 	}
 	return 0;
