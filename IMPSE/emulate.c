@@ -747,6 +747,7 @@ int main(int argc, char *argv[]){
      */
 	struct IMPSS impss;
 	struct IMPSS *state = &impss;
+	state->stackptr->top = -1;
 
 	int j;
 	state -> PC = 0;
