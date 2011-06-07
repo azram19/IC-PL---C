@@ -60,7 +60,7 @@ struct IMPSS{
     int registers[NUMBER_OF_REGISTERS];
     char memory[SIZE_OF_MEMORY]; //I use `char` to get one byte memory cells
     int PC;
-		struct stack* stackptr;
+	struct stack* stackptr;
 };
 
 int get_register(struct IMPSS*, int);
@@ -747,8 +747,18 @@ int main(int argc, char *argv[]){
      */
 	struct IMPSS impss;
 	struct IMPSS *state = &impss;
-	state->stackptr->top = -1;
-
+	state -> stackptr = malloc(sizeof(struct stack)); 
+    state -> stackptr -> top = 0;
+    
+    /*
+     * Stack test 
+    
+    push(2, state -> stackptr);
+    push(3, state -> stackptr);
+    printf("%d %d", pop(state -> stackptr), pop(state -> stackptr));
+    */
+    
+    return 0;
 	int j;
 	state -> PC = 0;
 	for(j=0; j < NUMBER_OF_REGISTERS; ++j){
