@@ -28,11 +28,14 @@
 
 char delims[] = " \t";
 
+typedef struct map_node snode;
+typedef struct command scommand;
+
 struct map_node {
 	long long int key;
 	int value;
-	struct map_node * left;
-	struct map_node * right;
+	snode * left;
+	snode * right;
 };
 
 
@@ -62,10 +65,10 @@ long long int get_hashcode(char * s){
  * 
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int map_put(struct map_node * root, char * key, int value) {
+int map_put(snode * root, char * key, int value) {
     if(key[0] == '\0') return SUCCESS;
 
-	struct map_node * node = malloc(sizeof(struct map_node));
+	snode * node = malloc(sizeof(snode));
 	if(node == NULL){
 	    error(ERR_NOT_ENOUGH_MEMORY);
 		return ERROR;	
@@ -80,7 +83,10 @@ int map_put(struct map_node * root, char * key, int value) {
 	return SUCCESS;
 }
 
-int freeTheTree(struct map_node * root){
+/*
+ * @author Piotr Bar
+ */
+int freeTheTree(snode * root){
 	if(root == NULL) {
 		return SUCCESS;
 	}
@@ -95,7 +101,7 @@ int freeTheTree(struct map_node * root){
  * 
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int tree_insert(struct map_node * root, long long int key, struct map_node * node) {
+int tree_insert(snode * root, long long int key, snode * node) {
 	if (root -> key == EMPTY_KEY) {
 		root -> key = key;
 		root -> value = node -> value;
@@ -123,7 +129,7 @@ int tree_insert(struct map_node * root, long long int key, struct map_node * nod
  * @author Lukasz Koprowski <azram19@gmail.com>
  * @return Either value assigned to the key, or an EMPTY_KEY.
  */
-int map_get(struct map_node * root, char * key) {
+int map_get(snode * root, char * key) {
 	if (root == NULL || root -> key == EMPTY_KEY) {
 		return ERROR;
 	}
@@ -146,7 +152,7 @@ int map_get(struct map_node * root, char * key) {
  * @author Lukasz Koprowski <azram19@gmail.com>
  * @return OpCode
  */
-int op_char_to_int(char * op_code, struct map_node * op_codes_tree) {
+int op_char_to_int(char * op_code, snode * op_codes_tree) {
 	return map_get(op_codes_tree, op_code);
 }
 
@@ -163,6 +169,10 @@ int op_to_type(int op_code) {
 	return op_type[op_code];
 }
 
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
 int error(int error_code){
     
     switch(error_code){
@@ -200,13 +210,16 @@ int error(int error_code){
 		fprintf(stderr, 
                         "Error: The number of arguments must be 2\n");    
                 break;
-	}      
+	    }      
     }
     printf("\n");
     exit(EXIT_FAILURE);
     return ERROR;
 }
 
+/*
+ * @author Lukasz Koprowski
+ */
 int error_file(int error_code, char * filename){
     fprintf(stderr, "Problem with file: %s\n", filename); 
     error(error_code);
@@ -243,7 +256,7 @@ struct command {
 
 	//J (3) type function.
 	//0-5 opcode  | 6 - 31 Address
-	int type;
+	int type; 
 
 	char label[16];
 	int opcode;
@@ -260,27 +273,26 @@ struct command {
  * Parser for R-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void Rtype(char * str, struct command *token){	
-	char * tokenField;
+void Rtype(char * str, scommand *token){	
+	char * tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
-	token->r1 = reg_char_to_int(tokenField); 
+	token -> r1 = reg_char_to_int(tokenField); 
 	tokenField = strtok_r(str, delims, &str);
-	token->r2 = reg_char_to_int(tokenField);
+	token -> r2 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
-	token->r3 = reg_char_to_int(tokenField);	
+	token -> r3 = reg_char_to_int(tokenField);	
 }
 
 /*
  * Parser for I-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void Itype(char * str, struct command *token){	
-	int i;
-	char *tokenField;
+void Itype(char * str, scommand *token){	
+	char *tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
 	token -> r1 = reg_char_to_int(tokenField);
 	tokenField = strtok_r(str, delims, &str);
@@ -288,15 +300,13 @@ void Itype(char * str, struct command *token){
 	tokenField = strtok_r(str, delims, &str);
 	if(isalpha(tokenField[0])){	// tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
-		for(i = 0; i < 16; ++i) token->labelValue[i] = tokenField[i];
+		strcpy(token -> labelValue, tokenField);
 	}
 	else {
 		if(tokenField[0] == '0' && tokenField[1] == 'x'){ // tokenField is a hex
-			token->constantValue = strtol(tokenField, NULL, 0);
+			token -> constantValue = strtol(tokenField, NULL, 0);
 			token -> labelValue = (char *) malloc(16 * sizeof(char));
-			for(i = 0; i < 16; i++){
-			    token->labelValue[i] = tokenField[i];
-			}
+			strcpy(token -> labelValue, tokenField);
 		}
 		else token->constantValue = atoi(tokenField); // tokenField is an integer
 	}
@@ -306,15 +316,14 @@ void Itype(char * str, struct command *token){
  * Parser for J-type and S-type instructions
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
- * @improved_by Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
+ * @author Agnieszka Szefer <agnieszka.m.szefer@gmail.com>
  */
-void JorStype(char * str, struct command *token){	
-	int i;
-	char *tokenField;
+void JorStype(char * str, scommand *token){	
+	char *tokenField = NULL;
 	tokenField = strtok_r(str, delims, &str);
 	if (isalpha(tokenField[0])){ // tokenField is a label
 		token -> labelValue = (char *) malloc(16 * sizeof(char));
-		for (i = 0; i < 16; i++) token->labelValue[i] = tokenField[i];
+		strcpy(token -> labelValue, tokenField);
 	} else {
 		//it may be in int format, or hex format
 			if(tokenField[0] == '0' && tokenField[1] == 'x')
@@ -327,26 +336,25 @@ void JorStype(char * str, struct command *token){
  * Translates code line into struct token, and then returns it
  *
  * @author Lukasz Kmiecik <moa.1991@gmail.com>
+ * @author Agniszka Szefer
  */
-struct command * readToken(char * str, struct map_node * op_codes_tree) {
-	struct command *token;
-	token = (struct command *)malloc(sizeof(struct command));
+scommand * readToken(char * str, snode * op_codes_tree) {
+	scommand * token = NULL;
+	token = (scommand *)malloc(sizeof(scommand));
 
-	int registersNumber;
-	int i;
-	char * tokenField;
+	int i = 0;
+	char * tokenField = NULL;
 
 	tokenField = strtok_r(str, delims, &str);
 	//first thing is either label, or opcode
 
-	int lastCharIndex=(strlen(tokenField))-1;
-	char lastCharacter=tokenField[lastCharIndex];
-	//if ((tokenField[(strlen(tokenField)) - 1]) == ":") {
+	int lastCharIndex = strlen(tokenField) - 1;
+	char lastCharacter = tokenField[lastCharIndex];
 	if(lastCharacter==':'){
 		//we have a label;
 		for (i = 0; i < lastCharIndex; i++) {
-			if(tokenField[i]==':') break;
-			token->label[i] = tokenField[i];
+			if(tokenField[i] == ':') break;
+			token -> label[i] = tokenField[i];
 			
 		}
 		//jump straight to next token
@@ -380,10 +388,10 @@ struct command * readToken(char * str, struct map_node * op_codes_tree) {
 //-------------PB
 
 /*
- * I don't like this function's name :P, and I moved the creation of a labelTree `up`. LK
+ * @author Piotr Bar
  */
-void assemblerPass1(struct map_node * labelTree, struct command ** commandArray, int size){ 
-	int i;
+void assemblerPass1(snode * labelTree, scommand ** commandArray, int size){ 
+	int i = 0;
 	for(i = 0; i < size; i++){
 		if(commandArray[i] -> label != NULL){
 			if(map_get(labelTree, commandArray[i] -> label) != ERROR){
@@ -395,13 +403,17 @@ void assemblerPass1(struct map_node * labelTree, struct command ** commandArray,
 	}
 }
 
-int * assemblerPass2(struct map_node * labelTree, struct command ** commandArray, int * size){
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
+int * assemblerPass2(snode * labelTree, scommand ** commandArray, int * size){
 	int * bitArray = (int *)malloc((*size) * sizeof(int));
 	if(bitArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
-	int i, j, nba = 0;
-	for(i = 0, j =0; i < (*size); i++, j++){
+	int i = 0, j = 0, nba = 0;
+	for(i = 0, j = 0; i < (*size); i++, j++){
 	    nba = 0;
 	    replace_label(labelTree, commandArray[j], size);
 	    bitArray[i] = binary_converter(commandArray[j], &i, size, bitArray, &nba);
@@ -412,11 +424,12 @@ int * assemblerPass2(struct map_node * labelTree, struct command ** commandArray
 	return bitArray;
 }
 
-void binarywriter(char *filename, int *instructions, int ninstructions){
+/*
+ * @author Piotr Bar
+ */
+void binarywriter(char * filename, int * instructions, int ninstructions){
 	FILE *fileptr = fopen(filename, "wb");
-	
 	fwrite(instructions, sizeof(instructions[0]), ninstructions, fileptr);
-	
 	fclose(fileptr);
 }
 
@@ -436,14 +449,14 @@ int signed_reduction(int r){
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int binary_converter(struct command * c, int * i, int * size, int * ba, int * nba){
+int binary_converter(scommand * c, int * i, int * size, int * ba, int * nba){
     int instr = 0;
-    if(c->opcode < 0 || c->opcode >= NUMBER_OF_INSTRUCTIONS){
+    if(c -> opcode < 0 || c -> opcode >= NUMBER_OF_INSTRUCTIONS){
         error(ERR_UNDEFINED_OPERATION);
     }
-    if(c->r1 < 0 || c->r1 >= MAX_NUMBER_OF_REGISTERS ||
-	c->r2 < 0 || c->r2 >= MAX_NUMBER_OF_REGISTERS ||
-	c->r3 < 0 || c->r3 >= MAX_NUMBER_OF_REGISTERS){
+    if(c -> r1 < 0 || c -> r1 >= MAX_NUMBER_OF_REGISTERS ||
+	c -> r2 < 0 || c -> r2 >= MAX_NUMBER_OF_REGISTERS ||
+	c -> r3 < 0 || c -> r3 >= MAX_NUMBER_OF_REGISTERS){
         error(ERR_WRONG_REGISTER);
     }
     if(c -> type != TYPE_S) instr |= (c -> opcode << 26);
@@ -465,11 +478,11 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
          * Increase size of an output array and reallocate memory.
         */
         if(c -> constantValue > 1){
-            (*size) += (c -> constantValue - 1);
-            (*i) += (c -> constantValue - 1);
-            *nba = realloc(ba, (*size) * sizeof(int));
-            int i;
-            for(i = (*size) - (c -> constantValue); i < (*size); i++ ){
+            *size += (c -> constantValue - 1);
+            *i += (c -> constantValue - 1);
+            *nba = realloc(ba, *size * sizeof(int));
+            int i = 0;
+            for(i = *size - c -> constantValue; i < *size; i++){
                 ba[i] = 0;
             }
         }
@@ -485,12 +498,12 @@ int binary_converter(struct command * c, int * i, int * size, int * ba, int * nb
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
  */
-int replace_label(struct map_node * labels, struct command * c, int * size){
+int replace_label(snode * labels, scommand * c, int * size){
     int addr = 0;
     
     if(c -> labelValue != NULL){
         addr = map_get(labels, c -> labelValue);
-        if(addr < -1 || addr > 4*((*size)-1)){
+        if(addr < -1 || addr > 4 * (*size - 1)){
         	error(ERR_ILLEGAL_MEMORY_ACCESS);
     	}
 
@@ -505,33 +518,21 @@ int replace_label(struct map_node * labels, struct command * c, int * size){
 }
 
 /*
- * Converts big endian number to little endian.
- *
- * @author Lukasz Koprowski <azram19@gmail.com>
+ * @author Piotr Bar
  */
-int betole(int b){
-    int l = 0;
-    int i;
-    
-    for(i = 0; i < 4; i++){
-        l <<= 8;
-        l |= b%(1 << 7);
-        b /= (1 << 7);
-    }
-    
-    return l;
-}
-
-struct command **createCommandArray(int number_of_commands){
-	struct command **commandArray =(struct command **) malloc(number_of_commands * sizeof(struct command *));
+scommand **createCommandArray(int number_of_commands){
+	scommand **commandArray = (scommand **) malloc(number_of_commands * sizeof(scommand *));
 	if(commandArray == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}
 	return commandArray;
 }
-		
-struct map_node * createLabelTree(){
-	struct map_node * labelTree = (struct map_node *)malloc(sizeof(struct map_node)); 
+
+/*
+ * @author Lukasz Koprowski
+ */
+snode * createLabelTree(){
+	snode * labelTree = (snode *) malloc(sizeof(snode)); 
 	if(labelTree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}	
@@ -541,8 +542,11 @@ struct map_node * createLabelTree(){
 	return labelTree;
 }
 
-struct map_node * createOpcodeTree(){
-	struct map_node * op_codes_tree = (struct map_node * ) malloc(sizeof(struct map_node));
+/*
+ * @author Lukasz Koprowski
+ */
+snode * createOpcodeTree(){
+	snode * op_codes_tree = (snode * ) malloc(sizeof(snode));
 	if(op_codes_tree == NULL){
 		error(ERR_NOT_ENOUGH_MEMORY);
 	}
@@ -583,20 +587,23 @@ int fileSize(FILE *inputFile){
 	return number_of_commands;
 }
 
-int tokenise(FILE *inputFile, struct command **commandArray, int number_of_commands, struct map_node * op_codes_tree){
+/*
+ * @author Lukasz Kmiecik
+ */
+int tokenise(FILE *inputFile, scommand **commandArray, int number_of_commands, snode * op_codes_tree){
 	char str[256];
 	int x;
 	const char EOL = '\n';
-	int i=0;
+	int i = 0;
 	int j;
-	int line=0;
-	int nonempty=0;
+	int line = 0;
+	int nonempty = 0;
 	while ((x = fgetc(inputFile)) != EOF) {
 	//read one line
 		if (x == EOL) {
 		//fist we have to check if the line is empty, if it is, fuck passing.
 			for(j = i; j > 0; j--){
-				if(str[j] != ' ' || str[j] != '\n' || str[j] != '\t'){
+				if(!isspace(str[j])){
 					nonempty = 1;
 				}
 			}
@@ -608,9 +615,9 @@ int tokenise(FILE *inputFile, struct command **commandArray, int number_of_comma
 				number_of_commands--; //line of code is empty
 			}
 			//empty the buffer
-			memset(str, '\0' ,sizeof(str));
-			nonempty=0;
-			i=0;
+			memset(str, '\0', sizeof(str));
+			nonempty = 0;
+			i = 0;
 		} else {
 			str[i] = (char) x;
 			i++;
@@ -619,45 +626,51 @@ int tokenise(FILE *inputFile, struct command **commandArray, int number_of_comma
 	return number_of_commands;
 }
 
-void freeArray(struct command **commandArray, int ii){
-	int i;
+/*
+ * @author Piotr Bar
+ * @author Lukasz Koprowski
+ */
+void freeCommandArray(scommand **commandArray, int ii){
+	int i = 0;
 	for(i = 0; i < ii; i++){
-	    if(commandArray[i] != NULL)free(commandArray[i] -> labelValue);
+	    if(commandArray[i] != NULL) free(commandArray[i] -> labelValue);
 	    free(commandArray[i]);
 	}
 	free(commandArray);
 }
 
+/*
+ * @author Piotr Bar
+ */
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
 		error(ERR_WRONG_NUM_OF_ARGS);
 		return ERROR;
 	} else {
-		FILE *inputFile;
+		FILE *inputFile = NULL;
 		inputFile = fopen(argv[1], "r");
 		if (inputFile == NULL) {
 	   		error_file(ERR_CANT_OPEN_FILE, argv[1]);
 			return ERROR;
 		} else {
-			struct map_node * op_codes_tree = createOpcodeTree(); 
+			snode * op_codes_tree = createOpcodeTree(); 
 			char *outputPath = argv[2];
 			int number_of_commands = fileSize(inputFile);
 			int ii = number_of_commands;
-			struct command **commandArray = createCommandArray(number_of_commands);
+			scommand **commandArray = createCommandArray(number_of_commands);
 			number_of_commands = tokenise(inputFile, commandArray, number_of_commands, op_codes_tree);
 			fclose(inputFile);
+			freeTheTree(op_codes_tree);
 			
-    		struct map_node * labelTree = createLabelTree();	
+    		snode * labelTree = createLabelTree();	
 			assemblerPass1(labelTree, commandArray, number_of_commands);
 			int * bitArray = assemblerPass2(labelTree, commandArray, &number_of_commands);
 			binarywriter(outputPath, bitArray, number_of_commands);		
 					
 			free(bitArray);
 		    freeTheTree(labelTree); 
-			freeTheTree(op_codes_tree);
-			freeArray(commandArray, ii);
+			freeCommandArray(commandArray, ii);
 		}
 	}
 	return 0;
 }
-

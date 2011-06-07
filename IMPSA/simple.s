@@ -1,4 +1,4 @@
-start:  addi $1 $0 2
+startus:  addi $1 $0 2
         sw $1 $0 0
         lw $2 $0 0
         add $0 $2 $2
