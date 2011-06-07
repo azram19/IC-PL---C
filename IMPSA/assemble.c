@@ -228,7 +228,7 @@ int error_file(int error_code, char * filename){
 
 
 
-//❤        L S  .  .  . f  r  o  m         h   e  r   e       ❤
+//â¤        L S  .  .  . f  r  o  m         h   e  r   e       â¤
 
 /*
  * Converts register symbol to integer
