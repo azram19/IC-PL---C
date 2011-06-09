@@ -226,10 +226,6 @@ int error_file(int error_code, char * filename){
 }
 
 
-
-
-//â¤        L S  .  .  . f  r  o  m         h   e  r   e       â¤
-
 /*
  * Converts register symbol to integer
  *
@@ -385,8 +381,6 @@ scommand * readToken(char * str, snode * op_codes_tree) {
 	return token;
 }
 
-//-------------PB
-
 /*
  * @author Piotr Bar
  */
@@ -433,7 +427,6 @@ void binarywriter(char * filename, int * instructions, int ninstructions){
 	fclose(fileptr);
 }
 
-//-------------PB
 /* 
  * Reduces 32bit signed integer to 16 bit signed integer. 
  *
@@ -570,7 +563,6 @@ char * evaluate_expression(char * expr){
         } else if(isspace(expr[i])){
             if(number_end == 0) {i++; continue;}
             
-            //printf("d%s ", number);
             for(j = 0; j < number_end; j++){
                 output[output_end++] = number[j];
             }
