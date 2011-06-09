@@ -409,8 +409,9 @@ int fileSize(FILE *inputFile){
 	return number_of_commands;
 }
 
-/*
- * @author Lukasz Kmiecik
+/* Takes code, line by line and passes it to the tokenising function, if line is empty, it will skip it
+ *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
  */
 void tokenise(FILE *inputFile, scommand **commandArray, int * number_of_commands, snode * op_codes_tree){
 	char str[256];
@@ -423,7 +424,7 @@ void tokenise(FILE *inputFile, scommand **commandArray, int * number_of_commands
 	while ((x = fgetc(inputFile)) != EOF) {
 	//read one line
 		if (x == EOL) {
-		//fist we have to check if the line is empty, if it is, fuck passing.
+		//fist we have to check if the line is empty, if it is, pierdolic parsing.
 			for(j = i; j > 0; j--){
 				if(!isspace(str[j])){
 					nonempty = 1;
@@ -472,6 +473,7 @@ void freeCommandArray(scommand **commandArray, int array_length){
  * assemblerPass2. Finally, binarywriter writes the content of the bitArray to the 
  * output file specified in argv[2]. At the end all the occupied memory becomes free.
  *
+ * @author Lukasz Kmiecik <moa.1991@gmail.com>
  * @author Piotr Bar
  */
 int main(int argc, char *argv[]) {
