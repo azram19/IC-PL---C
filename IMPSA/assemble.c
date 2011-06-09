@@ -298,9 +298,9 @@ int binary_converter(scommand * c, int * i, int * size, int * ba, int * nba){
             *i += (c -> constantValue - 1);
             *nba = realloc(ba, *size * sizeof(int));
             int i = 0;
-            for(i = *size - (c -> constantValue - 1); i < *size; i++){
-                ba[i] = 0;
-            }
+        	for(i = *size - (c -> constantValue - 1); i < *size; i++){
+	            ba[i] = 0;
+	        }
         }
     } else {
         instr |= signed_reduction(c -> constantValue);
