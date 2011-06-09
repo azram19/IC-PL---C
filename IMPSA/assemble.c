@@ -95,6 +95,8 @@ int map_put(snode * root, char * key, int value) {
 }
 
 /*
+ * Function frees the memory occupied by a binary search tree.
+ *
  * @author Piotr Bar
  */
 int freeTheTree(snode * root){
@@ -169,6 +171,8 @@ int op_to_type(int op_code) {
 }
 
 /*
+ * Handles error codes.
+ *
  * @author Piotr Bar
  * @author Lukasz Koprowski
  */
@@ -382,6 +386,10 @@ scommand * readToken(char * str, snode * op_codes_tree) {
 }
 
 /*
+ * Function analyses the array of structs and puts labels in a label 
+ * tree with associated memory addresses. If a particular label is
+ * encountered for the second time, an error will occur.
+ *
  * @author Piotr Bar
  */
 void assemblerPass1(snode * labelTree, scommand ** commandArray, int size){ 
@@ -418,7 +426,11 @@ int * assemblerPass2(snode * labelTree, scommand ** commandArray, int * size){
 	return bitArray;
 }
 
-/*
+/* 
+ * Binarywriter takes 3 arguments, pointer to filename, pointer to an array
+ * of instructions and a number of instructions. It takes instructions from an
+ * array and writes them into the specified file.
+ *
  * @author Piotr Bar
  */
 void binarywriter(char * filename, int * instructions, int ninstructions){
@@ -510,7 +522,9 @@ int replace_label(snode * labels, scommand * c, int * size){
     return SUCCESS;
 }
 
-/*
+/* 
+ * Function allocates memory for an array of pointers to structs.
+ *
  * @author Piotr Bar
  */
 scommand **createCommandArray(int number_of_commands){
@@ -533,7 +547,7 @@ snode * createLabelTree(){
 		error(ERR_NOT_ENOUGH_MEMORY);	
 	}	
    	labelTree -> key = EMPTY_KEY;
-    labelTree -> left = NULL;
+	labelTree -> left = NULL;
 	labelTree -> right = NULL;
 	return labelTree;
 }
@@ -732,6 +746,9 @@ void tokenise(FILE *inputFile, scommand **commandArray, int * number_of_commands
 }
 
 /*
+ * Function frees the memory occupied by a commandArray. It frees space 
+ * occupied by each single struct and also labelValues in some structs.
+ *
  * @author Piotr Bar
  * @author Lukasz Koprowski
  */
@@ -745,6 +762,14 @@ void freeCommandArray(scommand **commandArray, int array_length){
 }
 
 /*
+ * In main: the number of arguments is checked, the opcode tree and array of commands 
+ * are created also the number of commands is checked. Then the inupt is split into 
+ * tokens and located in an array of structs 'command'. Memory occupied by an opcode 
+ * tree can become free at this point. Then in assemblerPass1 the labels are mapped
+ * to appropriate memory addresses. Moreover, the binary conversion is created in 
+ * assemblerPass2. Finally, binarywriter writes the content of the bitArray to the 
+ * output file specified in argv[2]. At the end all the occupied memory becomes free.
+ *
  * @author Piotr Bar
  */
 int main(int argc, char *argv[]) {
