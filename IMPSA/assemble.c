@@ -506,3 +506,8 @@ int main(int argc, char *argv[]) {
 	freeCommandArray(commandArray, noca_length);
 	return 0;
 }
+
+/*
+ * Program has been thoroughly tested by Valgrind for memory leaks. There are  
+ * no memory leaks in this program.
+ */
