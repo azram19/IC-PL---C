@@ -1,6 +1,6 @@
 #!/bin/sh
 echo "$(tput setaf 5)Compiling....$(tput sgr0)"
-if gcc -Wall -g -O2 -o assemble assemble.c ; then
+if gcc -Wall -g -O2 -o assemble assemble.c tree.c error.c ; then
   echo "$(tput setaf 2)[OK]$(tput sgr0)"
 else
   echo "$(tput setaf 1)[FAIL]$(tput sgr0)"

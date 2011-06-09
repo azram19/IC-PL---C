@@ -2,146 +2,18 @@
 #include<stdio.h>
 #include<string.h>
 #include<ctype.h>
-#include"assemble.h"
 
-#define TYPE_NA 4
-#define TYPE_J 1
-#define TYPE_I 2
-#define TYPE_R 3
-#define TYPE_S 5
+#ifndef ERROR
+#include "error.h"
+#endif
 
-#define EMPTY_KEY -1
+#ifndef TREE
+#include "tree.h"
+#endif
 
-#define SUCCESS 1
-#define HALT 0
-#define ERROR -1
-
-#define NUMBER_OF_INSTRUCTIONS 20
-#define MAX_NUMBER_OF_REGISTERS 32
-
-#define ERR_UNDEFINED_OPERATION 1
-#define ERR_ILLEGAL_MEMORY_ACCESS 2
-#define ERR_WRONG_REGISTER 3
-#define ERR_NOT_ENOUGH_MEMORY 4
-#define ERR_REPEATED_LABEL 5
-#define ERR_CANT_OPEN_FILE 6
-#define ERR_WRONG_NUM_OF_ARGS 7
+#include "assemble.h"
 
 char delims[] = " \t";
-
-struct map_node {
-	long long int key;
-	int value;
-	snode * left;
-	snode * right;
-};
-
-
-/*
- * Generates hashcode for the given string.
- * 
- * @author Lukasz Koprowski <azram19@gmail.com>
- * @return Hashcode
- */
-long long int get_hashcode(char * s){
-    long long int h = 0;
-    int i = 0;
-    int p = 101;
-    long long int pow = 1;
-    
-    while(s[i] != '\0'){
-        h += s[i++] * (pow *= p);
-    }
-    
-    return (h == -1) ? 1 : h;
-}
-
-/*
- * Inserts element into the map.
- * 
- * @author Lukasz Koprowski <azram19@gmail.com>
- */
-int map_put(snode * root, char * key, int value) {
-    if(key[0] == '\0') return SUCCESS;
-
-	snode * node = malloc(sizeof(snode));
-	if(node == NULL){
-	    error(ERR_NOT_ENOUGH_MEMORY);
-		return ERROR;	
-	}
-
-	node -> key = get_hashcode(key);
-	node -> value = value;
-	node -> left = NULL;
-	node -> right = NULL;
-
-	snode * fnode = map_find(root, node -> key);
-	
-	if (fnode -> key == EMPTY_KEY) {
-		fnode -> key = node -> key;
-		fnode -> value = node -> value;
-		free(node);
-	} else if (fnode -> key > node -> key) {
-		fnode -> right = node;
-	} else {
-		fnode -> left = node;
-	}
-	
-	return SUCCESS;
-}
-
-/*
- * Function frees the memory occupied by a binary search tree.
- *
- * @author Piotr Bar
- */
-int freeTheTree(snode * root){
-	if(root == NULL) {
-		return SUCCESS;
-	}
-	freeTheTree(root->left);	
-	freeTheTree(root->right);
-	free(root);
-	return SUCCESS;
-}
-
-/*
- * Finds value of an element in the map.
- * 
- * @author Lukasz Koprowski <azram19@gmail.com>
- * @return Either value assigned to the key, or an EMPTY_KEY.
- */
-int map_get(snode * root, char * key) {
-    long long int hash = get_hashcode(key);
-    
-    snode * fnode = map_find(root, hash);
-    
-    if(fnode != NULL && fnode -> key == hash){
-        return fnode -> value;
-    } else {
-        return ERROR;
-    }
-}
-
-/*
- * Finds node in the map.
- * 
- * @author Lukasz Koprowski <azram19@gmail.com>
- * @return Either node ot a parent it'd have.
- */
-snode * map_find(snode * root, long long int key){
-    if (root == NULL ) {
-		return NULL;
-	} else if (root -> key == key || root -> key == EMPTY_KEY) {
-		return root;
-	} else if (root -> key > key) {
-	    if(root -> right == NULL) return root;
-		return map_find(root -> right, key);
-	} else {
-	    if(root -> left == NULL) return root;
-		return map_find(root -> left, key);
-	}
-}
 
 /*
  * Returns OpCode assigned to the given instruction.
@@ -165,66 +37,6 @@ int op_to_type(int op_code) {
 			TYPE_I, TYPE_J, TYPE_R, TYPE_J, TYPE_S, TYPE_S };
 	return op_type[op_code];
 }
-
-/*
- * Handles error codes.
- *
- * @author Piotr Bar
- * @author Lukasz Koprowski
- */
-int error(int error_code){
-    
-    switch(error_code){
-        case ERR_UNDEFINED_OPERATION: {
-                fprintf(stderr, 
-                        "Error: This operation is not defined.\n");  
-                break;
-            }
-        case ERR_ILLEGAL_MEMORY_ACCESS: {
-                 fprintf(stderr, 
-                        "Error: Illegal memory access.\n");
-                break;
-            }
-        case ERR_WRONG_REGISTER: {
-                fprintf(stderr, 
-                    "Error 404: register doesn't exist. Program terminated.\n");        
-                break;
-            }
-        case ERR_NOT_ENOUGH_MEMORY: {
-                fprintf(stderr, 
-                        "Error: Not enough memory. Program terminated.\n");    
-                break;
-            }
-        case ERR_REPEATED_LABEL: {
-                fprintf(stderr, 
-                        "Error: There are two labels with the same name.\n");  
-                break;
-            }
-        case ERR_CANT_OPEN_FILE: {
-                fprintf(stderr, 
-                        "Error: Can not open the file. Program terminated.\n");    
-                break;
-        }    
-	case ERR_WRONG_NUM_OF_ARGS: {
-		fprintf(stderr, 
-                        "Error: The number of arguments must be 2\n");    
-                break;
-	    }      
-    }
-    printf("\n");
-    exit(EXIT_FAILURE);
-    return ERROR;
-}
-
-/*
- * @author Lukasz Koprowski
- */
-int error_file(int error_code, char * filename){
-    fprintf(stderr, "Problem with file: %s\n", filename); 
-    error(error_code);
-    return ERROR;
-}
-
 
 /*
  * Converts register symbol to integer
@@ -447,8 +259,11 @@ int signed_reduction(int r){
 
 /*
  * Converts struct into its binary represantation; instruction.
+ * To be able to pass a new address of ba array, after realloc is called, 
+ * I used a pointer to an int which holds the new address.
  *
  * @author Lukasz Koprowski <azram19@gmail.com>
+ * @param nba used to return new address of ba array
  */
 int binary_converter(scommand * c, int * i, int * size, int * ba, int * nba){
     int instr = 0;

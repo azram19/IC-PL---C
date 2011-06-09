@@ -1,12 +1,24 @@
-typedef struct map_node snode;
+#ifndef ERROR
+#include "error.h"
+#endif
+
+#ifndef TREE
+#include "tree.h"
+#endif
+
+#define TYPE_NA 4
+#define TYPE_J 1
+#define TYPE_I 2
+#define TYPE_R 3
+#define TYPE_S 5
+
+#define SUCCESS 1
+#define HALT 0
+
+#define NUMBER_OF_INSTRUCTIONS 20
+#define MAX_NUMBER_OF_REGISTERS 32
+
 typedef struct command scommand;
-
-long long int get_hashcode(char * s);
-
-snode * map_find(snode *, long long int);
-int map_put(snode * root, char * key, int value);
-int map_get(snode * root, char * key);
-int freeTheTree(snode * root);
 
 int op_char_to_int(char *, snode *);
 int op_to_type(int);
