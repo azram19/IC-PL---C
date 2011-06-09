@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<ctype.h>
+#include"assemble.h"
 
 #define TYPE_NA 4
 #define TYPE_J 1
@@ -27,11 +28,6 @@
 #define ERR_WRONG_NUM_OF_ARGS 7
 
 char delims[] = " \t";
-
-typedef struct map_node snode;
-typedef struct command scommand;
-
-snode * map_find(snode *, long long int);
 
 struct map_node {
 	long long int key;
@@ -551,115 +547,6 @@ snode * createLabelTree(){
 	labelTree -> right = NULL;
 	return labelTree;
 }
-
-int op_prec(const char op){
-    if(op == '*') return 3;
-    if(op == '/') return 3;
-    if(op == '+') return 2;
-    if(op == '-') return 2;
-    if(op == '%') return 3;
-}
-
-char * evaluate_expression(char * expr){
-    char * output = malloc(32 * sizeof(char));
-    char stack[16];
-    char number[16];
-    int number_end = 0;
-    int stack_end = 0;
-    int output_end = 0;
-    int i = 0, j;
-    
-    memset(number, '\0', 16);
-    
-    while(expr[i] != '\0'){
-        if(isdigit(expr[i])){
-            number[number_end++] = expr[i];
-        } else if(isspace(expr[i])){
-            if(number_end == 0) {i++; continue;}
-            
-            for(j = 0; j < number_end; j++){
-                output[output_end++] = number[j];
-            }
-            output[output_end++] = ' ';
-            
-            number_end = 0;
-            memset(number, '\0', 16);
-            
-        } else if(expr[i] == '(') {
-            stack[stack_end++] = '(';
-        } else if(expr[i] == ')') {
-            int j = stack_end;
-            while(stack_end - 1 != '('){
-                output[output_end++] = stack[--stack_end];
-                output[output_end++] = ' ';
-            }
-            stack_end--;
-        } else {
-            int pre = op_prec(expr[i]);
-            while(op_prec(stack[stack_end - 1]) >= pre){
-                output[output_end++] = stack[--stack_end];
-                output[output_end++] = ' ';
-            }
-            stack[stack_end++] = expr[i];
-        }
-        i++;
-    }
-    
-    for(j = 0; j < number_end; j++){
-        output[output_end++] = number[j];
-    }
-    output[output_end++] = ' ';
-    
-    while(stack_end > 0){
-        output[output_end++] = stack[--stack_end];
-        output[output_end++] = ' ';
-    }
-    
-    return output;
-}
-
-int compute_RPN(char * expr){
-    int stack[16];
-    char number[16];
-    int number_end = 0;
-    int stack_end = 0;
-    int i = 0, a, b;
-    
-    memset(number, '\0', 16);
-    
-    while(expr[i] != '\0'){
-        if(isdigit(expr[i])){
-            number[number_end++] = expr[i];
-        } else if(isspace(expr[i])){
-            if(number_end == 0){i++; continue;}
-            stack[stack_end++] = atoi(number);
-            number_end = 0;
-            memset(number, '\0', 16);
-        } else {
-            a = stack[--stack_end];
-            b = stack[--stack_end];
-            
-           
-            if(expr[i] == '+'){
-                stack[stack_end++] = b + a;
-            } else if(expr[i] == '-'){
-                stack[stack_end++] = b - a;
-            } else if(expr[i] == '/'){
-                stack[stack_end++] = b / a;
-            } else if(expr[i] == '*'){
-                stack[stack_end++] = b * a;
-            } else if(expr[i] == '%'){
-                stack[stack_end++] = b % a;
-            }
-
-        }
-        i++;
-    }
-    
-    free(expr);
-    return stack[0];   
-}
-
 /*
  * @author Lukasz Koprowski
  */
