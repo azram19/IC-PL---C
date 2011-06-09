@@ -37,7 +37,6 @@ int map_put(snode * root, char * key, int value) {
 	snode * node = malloc(sizeof(snode));
 	if(node == NULL){
 	    error(ERR_NOT_ENOUGH_MEMORY);
-		return ERROR;	
 	}
 
 	node -> key = get_hashcode(key);
